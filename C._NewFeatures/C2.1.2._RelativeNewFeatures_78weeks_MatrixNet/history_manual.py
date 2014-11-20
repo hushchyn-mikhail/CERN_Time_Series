@@ -10,3 +10,7 @@ session = ipykee.Session(project_name="C._NewFeatures")
 # <codecell>
 
 session.commit("Upload by ipykee. Second commit.")
+
+# <codecell>
+
+session.commit("Upload by ipykee. Second commit.")
