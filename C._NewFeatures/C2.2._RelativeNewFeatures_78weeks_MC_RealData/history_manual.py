@@ -8,8 +8,4 @@ session = ipykee.Session(project_name="C._NewFeatures")
 
 # <codecell>
 
-session.commit("Upload by ipykee. This is C1.2 notebook.")
-
-# <codecell>
-
-session.commit("Upload by ipykee. This is C1.2 notebook.")
+session.commit("Upload by ipykee. NOT READY.")
