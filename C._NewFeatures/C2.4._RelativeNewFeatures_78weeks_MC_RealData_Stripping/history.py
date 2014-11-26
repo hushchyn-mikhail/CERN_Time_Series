@@ -1684,3 +1684,7 @@ print memory_all
 import ipykee
 session = ipykee.Session(project_name="C._NewFeatures")
 
+# <codecell>
+
+session.commit("Upload by ipykee. Optimized. Restart.")
+
