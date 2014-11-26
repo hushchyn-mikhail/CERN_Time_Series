@@ -899,3 +899,7 @@ session = ipykee.Session(project_name="C._NewFeatures")
 
 #session.commit("This is C2.1.1. yet")
 
+# <codecell>
+
+session.commit("Classifier was trained. 1-78weeks of usage were added to train. Not optimized.")
+
