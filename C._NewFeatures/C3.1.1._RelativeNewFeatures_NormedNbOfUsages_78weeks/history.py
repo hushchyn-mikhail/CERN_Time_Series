@@ -81,6 +81,9 @@ def MassCenter(data_sel, periods):
     for i in periods:
         if i!=1:
             data_bv[i] = data_sel[i] - data_sel[i-1]
+    max_values = data_bv[periods].max(axis=1)
+    for i in periods:
+        data_bv[i] = (data_bv[i]/max_values).values
     
     mass_center = []
     mass_center2 = []
@@ -205,7 +208,7 @@ for i in periods:
 max_values = data_b[periods].max(axis=1)
 
 for i in periods:
-    df[i] = data_b[i].values #Not normed!!!
+    df[i] = (data_b[i]/max_values).values
 
 # <codecell>
 
@@ -246,12 +249,23 @@ df.shape
 
 # <codecell>
 
+#new names of the columns
+cols_txt = list(df.columns[0:32])
+periods_txt=[]
+for i in df.columns[32:]:
+    periods_txt.append(str(i))
+new_cols = cols_txt + periods_txt
+df_new = pd.DataFrame(data=df.values, columns=new_cols)
+df_new.columns
+
+# <codecell>
+
 #Preparing signal and background data for classifier
 from cern_utils import data_storage
 
 #Load signal and background data
-signal_data = data_storage.DataStorageDF(df[y_true == 1])
-bck_data = data_storage.DataStorageDF(df[y_true == 0])
+signal_data = data_storage.DataStorageDF(df_new[y_true == 1])
+bck_data = data_storage.DataStorageDF(df_new[y_true == 0])
 # Get train and test data
 signal_train, signal_test = signal_data.get_train_test(train_size=0.5)
 bck_train, bck_test = bck_data.get_train_test(train_size=0.5)
@@ -271,7 +285,7 @@ variables = [u'last-zeros', u'inter_max', u'nb_peaks', u'inter_mean', u'inter_st
              u'mass_center_sqr', u'mass_moment', u'r_moment', u'DiskSize', u'LogDiskSize', u'total_usage', u'mean_usage',
              u'FileType', u'Configuration', u'ProcessingPass', u'log_total_usage', u'log_mean_usage']+other_vars
 
-#variables = signal_data.columns
+variables = signal_data.columns
 
 print variables
 print len(variables)
@@ -293,14 +307,14 @@ from cern_utils import xgboost_classifier
 param = {}
 param['objective'] = 'binary:logitraw'
 param['scale_pos_weight'] = 1
-param['eta'] = 0.02
+param['eta'] = 0.05
 param['max_depth'] = 6
 param['eval_metric'] = 'map'
 param['silent'] = 1
 param['nthread'] = 16
 param['min_child_weight'] = 1
 param['subsample'] = 0.8
-param['colsample_bytree'] = 1
+param['colsample_bytree'] = 0.5
 param['base_score'] = 0.5
 #param['num_feature'] = 10
 
@@ -438,7 +452,7 @@ legend(loc='best')
 # <codecell>
 
 #Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
+series = signal_test.get_data()[periods_txt]
 series = series[iron(report.prediction_sig['xgboost']) > 0.95]
 print "Number of series is ", series.shape[0]
 for i in range(0, series.shape[0]):
@@ -452,7 +466,7 @@ plt.show()
 # <codecell>
 
 #Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
+series = signal_test.get_data()[periods_txt]
 series = series[iron(report.prediction_sig['xgboost']) > 0.8]
 print "Number of series is ", series.shape[0]
 for i in range(0, series.shape[0]):
@@ -466,12 +480,12 @@ plt.show()
 # <codecell>
 
 #Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
+series = signal_test.get_data()[periods_txt]
 series = series[(iron(report.prediction_sig['xgboost']) > 0.4)&(iron(report.prediction_sig['xgboost']) < 0.8)]
 print "Number of series is ", series.shape[0]
 for i in range(0, series.shape[0]):
     cur_serie = series.irow(i)
-    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.01)
+    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
 plt.xlim(1,78)
 plt.xlabel('Weeks')
 plt.ylabel('Nb of usages')
@@ -883,28 +897,5 @@ session = ipykee.Session(project_name="C._NewFeatures")
 
 # <codecell>
 
-#session.commit("Upload by ipykee. Time series for several popularity intervals added. Nb of usages = !from 0. !to 1.")
-
-# <codecell>
-
-#Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
-series = series[(iron(report.prediction_sig['xgboost']) > 0.4)&(iron(report.prediction_sig['xgboost']) < 0.8)]
-print "Number of series is ", series.shape[0]
-for i in range(0, series.shape[0]):
-    cur_serie = series.irow(i)
-    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
-plt.xlim(1,78)
-plt.xlabel('Weeks')
-plt.ylabel('Nb of usages')
-plt.show()
-
-# <codecell>
-
-session.commit("Upload by ipykee. Time series for several popularity intervals added. Nb of usages = !from 0. !to max_value")
-
-# <codecell>
-
-import ipykee
-session = ipykee.Session(project_name="C._NewFeatures")
+#session.commit("This is C2.1.1. yet")
 
