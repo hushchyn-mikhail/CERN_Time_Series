@@ -831,3 +831,21 @@ session = ipykee.Session(project_name="C._NewFeatures")
 
 session.commit("Upload by ipykee. Optimized")
 
+# <codecell>
+
+session.commit("Upload by ipykee. Optimized")
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[periods]
+series = series[iron(report.prediction_sig['xgboost']) > 0.95]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(1,78)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
