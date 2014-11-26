@@ -831,3 +831,7 @@ session = ipykee.Session(project_name="C._NewFeatures")
 
 #session.commit("Upload by ipykee.")
 
+# <codecell>
+
+session.commit("Upload by ipykee. Optimized")
+
