@@ -197,6 +197,18 @@ for i in p:
 
 # <codecell>
 
+#get noremd week's usages
+data_b = data_sel.copy()
+for i in periods:
+    if i!=1:
+        data_b[i] = data_sel[i] - data_sel[i-1]
+max_values = data_b[periods].max(axis=1)
+
+for i in periods:
+    df[i] = (data_b[i]/max_values.values).values
+
+# <codecell>
+
 y_true = ((data_sel[104] - data_sel[78]) == 0).values*1
 
 # <codecell>
@@ -422,6 +434,48 @@ iron = calc_util.classifier_flatten(report.prediction_sig['xgboost'])
 _ = hist(iron(report.prediction_sig['xgboost']),  histtype='bar', bins=20, alpha=0.5, label='signal')
 _ = hist(iron(report.prediction_bck['xgboost']),  histtype='bar', bins=20, alpha=0.5, label='bck')
 legend(loc='best')
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[periods]
+series = series[iron(report.prediction_sig['xgboost']) > 0.95]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(1,78)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[periods]
+series = series[iron(report.prediction_sig['xgboost']) > 0.8]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(1,78)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[periods]
+series = series[(iron(report.prediction_sig['xgboost']) > 0.4)&(iron(report.prediction_sig['xgboost']) < 0.8)]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(1,78)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
 
 # <codecell>
 
@@ -829,58 +883,8 @@ session = ipykee.Session(project_name="C._NewFeatures")
 
 # <codecell>
 
-session.commit("Upload by ipykee. Optimized")
+#session.commit("Upload by ipykee. Time series for several popularity intervals added. Nb of usages = 0 or 1.")
 
 # <codecell>
 
-session.commit("Upload by ipykee. Optimized")
-
-# <codecell>
-
-#Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
-series = series[iron(report.prediction_sig['xgboost']) > 0.95]
-print "Number of series is ", series.shape[0]
-for i in range(0, series.shape[0]):
-    cur_serie = series.irow(i)
-    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
-plt.xlim(1,78)
-plt.xlabel('Weeks')
-plt.ylabel('Nb of usages')
-plt.show()
-
-# <codecell>
-
-session.commit("Upload by ipykee. Time series for several popularity intervals added")
-
-# <codecell>
-
-#Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
-series = series[iron(report.prediction_sig['xgboost']) > 0.8]
-print "Number of series is ", series.shape[0]
-for i in range(0, series.shape[0]):
-    cur_serie = series.irow(i)
-    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
-plt.xlim(1,78)
-plt.xlabel('Weeks')
-plt.ylabel('Nb of usages')
-plt.show()
-
-# <codecell>
-
-#Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
-series = series[(iron(report.prediction_sig['xgboost']) > 0.4)&(iron(report.prediction_sig['xgboost']) < 0.8)]
-print "Number of series is ", series.shape[0]
-for i in range(0, series.shape[0]):
-    cur_serie = series.irow(i)
-    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
-plt.xlim(1,78)
-plt.xlabel('Weeks')
-plt.ylabel('Nb of usages')
-plt.show()
-
-# <codecell>
-
-session.commit("Upload by ipykee. Time series for several popularity intervals added. Nb of usages = 0 or 1.")
+session.commit("Upload by ipykee. Time series for several popularity intervals added. Nb of usages = !from 0. !to 1.")
