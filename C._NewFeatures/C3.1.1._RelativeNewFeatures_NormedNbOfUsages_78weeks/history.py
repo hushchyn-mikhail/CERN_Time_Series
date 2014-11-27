@@ -193,10 +193,12 @@ df['silence'] = df['FirstUsage']-df[u'Creation-week']
 # <codecell>
 
 #Add Binary Vector
+"""
 bv = Binary(data_sel, periods)
 p = np.array(periods) - periods[0]+1
 for i in p:
     df[i]=bv[i].values
+"""
 
 # <codecell>
 
@@ -207,8 +209,20 @@ for i in periods:
         data_b[i] = data_sel[i] - data_sel[i-1]
 max_values = data_b[periods].max(axis=1)
 
+#add weekly usages transformed to [0,1] range of values
 for i in periods:
-    df[i] = (data_b[i]/max_values).values
+    df[str(i)] = (data_b[i]/max_values).values
+#add periods in string form    
+periods_txt = []
+for i in periods:
+    periods_txt.append(str(i))
+
+#all weeks were divided into several bins.
+bins = []
+for i in range(0, periods[-1]//13):
+    cur_bin = data_b[range(i*13+1, (i+1)*13+1)]
+    df["bin"+str(i)] = cur_bin.mean(axis=1).values
+    bins.append("bin"+str(i))
 
 # <codecell>
 
@@ -250,6 +264,7 @@ df.shape
 # <codecell>
 
 #new names of the columns
+"""
 cols_txt = list(df.columns[0:32])
 periods_txt=[]
 for i in df.columns[32:]:
@@ -257,6 +272,7 @@ for i in df.columns[32:]:
 new_cols = cols_txt + periods_txt
 df_new = pd.DataFrame(data=df.values, columns=new_cols)
 df_new.columns
+"""
 
 # <codecell>
 
@@ -264,8 +280,8 @@ df_new.columns
 from cern_utils import data_storage
 
 #Load signal and background data
-signal_data = data_storage.DataStorageDF(df_new[y_true == 1])
-bck_data = data_storage.DataStorageDF(df_new[y_true == 0])
+signal_data = data_storage.DataStorageDF(df[y_true == 1])
+bck_data = data_storage.DataStorageDF(df[y_true == 0])
 # Get train and test data
 signal_train, signal_test = signal_data.get_train_test(train_size=0.5)
 bck_train, bck_test = bck_data.get_train_test(train_size=0.5)
@@ -283,9 +299,9 @@ variables = ['last-zeros', 'mass_center', 'inter_max', 'nb_peaks', u'inter_mean'
     
 variables = [u'last-zeros', u'inter_max', u'nb_peaks', u'inter_mean', u'inter_std', u'inter_rel', u'mass_center',
              u'mass_center_sqr', u'mass_moment', u'r_moment', u'DiskSize', u'LogDiskSize', u'total_usage', u'mean_usage',
-             u'FileType', u'Configuration', u'ProcessingPass', u'log_total_usage', u'log_mean_usage']+other_vars
+             u'FileType', u'Configuration', u'ProcessingPass', u'log_total_usage', u'log_mean_usage']+other_vars+bins
 
-variables = signal_data.columns
+#variables = signal_data.columns
 
 print variables
 print len(variables)
@@ -897,9 +913,5 @@ session = ipykee.Session(project_name="C._NewFeatures")
 
 # <codecell>
 
-#session.commit("This is C2.1.1. yet")
-
-# <codecell>
-
-session.commit("Classifier was trained. 1-78weeks of usage were added to train. Not optimized.")
+#session.commit("Classifier was trained. 1-78weeks of usage were added to train. Not optimized.")
 
