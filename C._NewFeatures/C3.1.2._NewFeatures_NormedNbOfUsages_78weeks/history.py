@@ -934,3 +934,7 @@ session = ipykee.Session(project_name="C._NewFeatures")
 
 #session.commit("Classifier was trained. Bins of Nb os usages were added. Not optimized.")
 
+# <codecell>
+
+session.commit("Optimized. Added plots that show the time series distribution along the antipopularity values.")
+
