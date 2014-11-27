@@ -918,3 +918,402 @@ session = ipykee.Session(project_name="C._NewFeatures")
 # <codecell>
 
 session.commit("Optimized.")
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[bins]
+series = series[iron(report.prediction_sig['xgboost']) > 0.95]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(1,78)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[bins]
+series = series[iron(report.prediction_sig['xgboost']) > 0.95]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(0,6)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[bins]
+series = series[iron(report.prediction_sig['xgboost']) > 0.85]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(0,6)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[periods_txt]
+series = series[(iron(report.prediction_sig['xgboost']) > 0.)&(iron(report.prediction_sig['xgboost']) < 0.2)]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(1,78)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[periods_txt]
+series = series[iron(report.prediction_sig['xgboost']) > 0.85]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(1,78)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[bins]
+series = series[(iron(report.prediction_sig['xgboost']) > 0.)&(iron(report.prediction_sig['xgboost']) < 0.2)]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(0,6)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[bins]
+series = series[(iron(report.prediction_sig['xgboost']) > 0.)&(iron(report.prediction_sig['xgboost']) < 0.05)]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(0,6)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[bins]
+series = series[(iron(report.prediction_sig['xgboost']) > 0.)&(iron(report.prediction_sig['xgboost']) < 0.99)]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(0,6)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[bins]
+series = series[(iron(report.prediction_sig['xgboost']) > 0.)&(iron(report.prediction_sig['xgboost']) < 0.2)]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(0,6)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[bins]
+series = series[(iron(report.prediction_sig['xgboost']) > 0.4)&(iron(report.prediction_sig['xgboost']) < 0.8)]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(0,6)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values
+series = signal_test.get_data()[bins]
+series = series[(iron(report.prediction_sig['xgboost']) > 0.9)&(iron(report.prediction_sig['xgboost']) < 1)]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(0,6)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+series = signal_test.get_data()[bins]
+series = series[(iron(report.prediction_sig['xgboost']) > 0.8)&(iron(report.prediction_sig['xgboost']) < 1)]
+print "Number of series is ", series.shape[0]
+for i in range(0, series.shape[0]):
+    cur_serie = series.irow(i)
+    plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+plt.xlim(0,6)
+plt.xlabel('Weeks')
+plt.ylabel('Nb of usages')
+plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+for i in range(0,10):
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[bins]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/10.)&(iron(report.prediction_sig['xgboost']) <= (i+1)/10.)]
+    print "Number of series is ", series.shape[0]
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+for i in range(0,10):
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[bins]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/10.)&(iron(report.prediction_sig['xgboost']) <= (i+1)/10.)]
+    print "Number of series is ", series.shape[0]
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(range(0, len(bins)), np.log(cur_serie.values+1), width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+for i in range(0,10):
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[periods_txt]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/10.)&(iron(report.prediction_sig['xgboost']) <= (i+1)/10.)]
+    print "Number of series is ", series.shape[0]
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(range(0, len(bins)), cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+for i in range(0,10):
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[periods_txt]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/10.)&(iron(report.prediction_sig['xgboost']) <= (i+1)/10.)]
+    print "Number of series is ", series.shape[0]
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+periods
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+for i in range(0,10):
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[periods_txt]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/10.)&(iron(report.prediction_sig['xgboost']) <= (i+1)/10.)]
+    print "Number of series is ", series.shape[0]
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,78)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+for i in range(0,10):
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[bins]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/10.)&(iron(report.prediction_sig['xgboost']) <= (i+1)/10.)]
+    print "Number of series is ", series.shape[0]
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(range(0, len(bins)), np.log10(cur_serie.values+1), width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+for i in range(0,10):
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[bins]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/10.)&(iron(report.prediction_sig['xgboost']) <= (i+1)/10.)]
+    print "Number of series is ", series.shape[0]
+    print "Antipopularity is (", i/10., ", ", (i+1)/10., "]"
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(range(0, len(bins)), np.log10(cur_serie.values+1), width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+intervals = range(0,20)
+for i in intervals:
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[bins]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/(float)len(intervals))&(iron(report.prediction_sig['xgboost']) <= (i+1)/(float)len(intervals))]
+    print "Number of series is ", series.shape[0]
+    print "Antipopularity is (", i/10., ", ", (i+1)/10., "]"
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(range(0, len(bins)), np.log10(cur_serie.values+1), width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+intervals = range(0,20)
+for i in intervals:
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[bins]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/float(len(intervals)))&(iron(report.prediction_sig['xgboost']) <= (i+1)/float(len(intervals)))]
+    print "Number of series is ", series.shape[0]
+    print "Antipopularity is (", i/10., ", ", (i+1)/10., "]"
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(range(0, len(bins)), np.log10(cur_serie.values+1), width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+intervals = range(0,20)
+for i in intervals:
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[bins]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/float(len(intervals)))&(iron(report.prediction_sig['xgboost']) <= (i+1)/float(len(intervals)))]
+    print "Number of series is ", series.shape[0]
+    print "Antipopularity is (", i/float(len(intervals)), ", ", (i+1)/float(len(intervals)), "]"
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(range(0, len(bins)), np.log10(cur_serie.values+1), width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+print "These plots show the time series distribution along the antipopularity values."
+print "All time series were splited into 6 bins with 13 weeks in each one."
+intervals = range(0,20)
+for i in intervals:
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[bins]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/float(len(intervals)))&(iron(report.prediction_sig['xgboost']) <= (i+1)/float(len(intervals)))]
+    print "Number of series is ", series.shape[0]
+    print "Antipopularity is (", i/float(len(intervals)), ", ", (i+1)/float(len(intervals)), "]"
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(range(0, len(bins)), np.log10(cur_serie.values+1), width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('log10(Nb of usages)')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+print "These plots show the time series distribution along the antipopularity values."
+print "All time series were splited into 6 bins with 13 weeks in each one."
+intervals = range(0,20)
+for i in intervals:
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[bins]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/float(len(intervals)))&(iron(report.prediction_sig['xgboost']) <= (i+1)/float(len(intervals)))]
+    print "Number of series is ", series.shape[0]
+    print "Antipopularity is (", i/float(len(intervals)), ", ", (i+1)/float(len(intervals)), "]"
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(range(0, len(bins)), np.log10(cur_serie.values+1), width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,6)
+    plt.xlabel('Weeks')
+    plt.ylabel('log10(Nb of usages)')
+    plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+for i in range(0,20):
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[periods_txt]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/20.)&(iron(report.prediction_sig['xgboost']) <= (i+1)/20.)]
+    print "Number of series is ", series.shape[0]
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
+    plt.xlim(0,78)
+    plt.xlabel('Weeks')
+    plt.ylabel('Nb of usages')
+    plt.show()
+
+# <codecell>
+
+session.commit("Added plots that show the time series distribution along the antipopularity values.")
