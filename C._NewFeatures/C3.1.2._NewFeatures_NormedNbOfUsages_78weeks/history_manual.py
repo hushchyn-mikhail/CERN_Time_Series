@@ -299,48 +299,6 @@ import inspect
 import os
 import sys
 
-code_path = os.path.join(os.path.split(inspect.getfile(inspect.currentframe()))[0], "/home/mikhail91/xgboost-master/wrapper")
-sys.path.append(code_path)
-
-import xgboost as xgb
-from cern_utils import xgboost_classifier
-
-
-# setup parameters for xgboost
-param = {}
-param['objective'] = 'binary:logitraw'
-param['scale_pos_weight'] = 1
-param['eta'] = 0.02
-param['max_depth'] = 6
-param['eval_metric'] = 'map'
-param['silent'] = 1
-param['nthread'] = 16
-param['min_child_weight'] = 1
-param['subsample'] = 0.8
-param['colsample_bytree'] = 1
-param['base_score'] = 0.5
-#param['num_feature'] = 10
-
-# you can directly throw param in, though we want to watch multiple metrics here 
-plst = list(param.items()) + [('eval_metric', 'map'), ('eval_metric', 'auc')]
-
-xgboost = xgboost_classifier.ClassifierXGBoost(directory='xgboost/')
-xgboost.set_params(features = variables, params = plst)
-#setup additional parameters
-xgboost.num_boost_round = 2500
-xgboost.watch = False
-
-#trainig classifier
-xgboost.fit(signal_train, bck_train)#,\
-            #weight_sig=signal_train.get_data(['total_usage']).values,\
-            #weight_bck=bck_train.get_data(['total_usage']).values)
-
-# <codecell>
-
-import inspect
-import os
-import sys
-
 code_path = os.path.join(os.path.split(inspect.getfile(inspect.currentframe()))[0], "xgboost-master/wrapper")
 sys.path.append(code_path)
 
@@ -534,6 +492,26 @@ plt.xlim(1,78)
 plt.xlabel('Weeks')
 plt.ylabel('Nb of usages')
 plt.show()
+
+# <codecell>
+
+#Plot signal_test series for an interval of antipopularity values using BINS
+print "These plots show the time series distribution along the antipopularity values."
+print "All time series were splited into 6 bins with 13 weeks in each one."
+intervals = range(0,20)
+for i in intervals:
+    plt.subplot(1,1,1)
+    series = signal_test.get_data()[bins]
+    series = series[(iron(report.prediction_sig['xgboost']) > i/float(len(intervals)))&(iron(report.prediction_sig['xgboost']) <= (i+1)/float(len(intervals)))]
+    print "Number of series is ", series.shape[0]
+    print "Antipopularity is (", i/float(len(intervals)), ", ", (i+1)/float(len(intervals)), "]"
+    for i in range(0, series.shape[0]):
+        cur_serie = series.irow(i)
+        plt.bar([1+i*13 for i in range(0, len(bins))], np.log10(cur_serie.values+1), width=13, bottom=0, color='b', edgecolor='b', alpha=0.02)
+    plt.xlim(1,79)
+    plt.xlabel('Weeks')
+    plt.ylabel('log10(Nb of usages)')
+    plt.show()
 
 # <codecell>
 
@@ -958,4 +936,4 @@ session = ipykee.Session(project_name="C._NewFeatures")
 
 # <codecell>
 
-session.commit("Classifier was trained. Bins of Nb os usages were added. Not optimized.")
+session.commit("Optimized. Added plots that show the time series distribution along the antipopularity values.")
