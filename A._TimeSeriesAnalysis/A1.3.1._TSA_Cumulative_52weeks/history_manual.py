@@ -711,3 +711,37 @@ session = ipykee.Session(project_name="A._TimeSeriesAnalysis")
 # <codecell>
 
 session.commit("Second")
+
+# <codecell>
+
+import ipykee
+#ipykee.create_project("A._TimeSeriesAnalysis", internal_path="A._TimeSeriesAnalysis", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
+session = ipykee.Session(project_name="A._TimeSeriesAnalysis")
+
+# <codecell>
+
+ session.add(report, "report")
+# session.add(report2, "report2")
+# session.add(report_train, "report_train")
+# session.add(report_train2, "report_train2")
+
+# <codecell>
+
+session.commit("Second")
+
+# <codecell>
+
+import ipykee
+#ipykee.create_project("A._TimeSeriesAnalysis", internal_path="A._TimeSeriesAnalysis", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
+session = ipykee.Session(project_name="A._TimeSeriesAnalysis")
+
+# <codecell>
+
+ session.add(report.roc(), "report.roc()")
+# session.add(report2, "report2")
+# session.add(report_train, "report_train")
+# session.add(report_train2, "report_train2")
+
+# <codecell>
+
+session.commit("Second")
