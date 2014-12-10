@@ -742,3 +742,67 @@ session = ipykee.Session(project_name="A._TimeSeriesAnalysis")
 # session.add(report_train, "report_train")
 # session.add(report_train2, "report_train2")
 
+# <codecell>
+
+session.commit("Second")
+
+# <codecell>
+
+import ipykee
+#ipykee.create_project("A._TimeSeriesAnalysis", internal_path="A._TimeSeriesAnalysis", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
+session = ipykee.Session(project_name="A._TimeSeriesAnalysis")
+
+# <codecell>
+
+session.add(report.roc(), "report.roc()")
+session.add(report2.roc(), "report2.roc()")
+session.add(report_train.roc(), "report_train.roc()")
+session.add(report_train2.roc(), "report_train2.roc()")
+
+session.add(report.prediction_sig['xgboost2'], "report.prediction_sig['xgboost2']")
+session.add(report2.prediction_sig['xgboost2'], "report2.prediction_sig['xgboost2']")
+
+session.add(report.prediction_bck['xgboost2'], "report.prediction_bck['xgboost2']")
+session.add(report2.prediction_bck['xgboost2'], "report2.prediction_bck['xgboost2']")
+
+session.add(report.prediction_pdf['xgboost2'], "report.prediction_pdf['xgboost2']")
+session.add(report2.prediction_pdf['xgboost2'], "report2.prediction_pdf['xgboost2']")
+
+# <codecell>
+
+session.add(report.roc(), "report.roc()")
+session.add(report2.roc(), "report2.roc()")
+session.add(report_train.roc(), "report_train.roc()")
+session.add(report_train2.roc(), "report_train2.roc()")
+
+session.add(report.prediction_sig['xgboost'], "report.prediction_sig['xgboost2']")
+session.add(report2.prediction_sig['xgboost2'], "report2.prediction_sig['xgboost2']")
+
+session.add(report.prediction_bck['xgboost'], "report.prediction_bck['xgboost2']")
+session.add(report2.prediction_bck['xgboost2'], "report2.prediction_bck['xgboost2']")
+
+session.add(report.prediction_pdf['xgboost'], "report.prediction_pdf['xgboost2']")
+session.add(report2.prediction_pdf['xgboost2'], "report2.prediction_pdf['xgboost2']")
+
+# <codecell>
+
+import ipykee
+#ipykee.create_project("A._TimeSeriesAnalysis", internal_path="A._TimeSeriesAnalysis", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
+session = ipykee.Session(project_name="A._TimeSeriesAnalysis")
+
+# <codecell>
+
+session.add(report.roc(), "report.roc()")
+session.add(report2.roc(), "report2.roc()")
+session.add(report_train.roc(), "report_train.roc()")
+session.add(report_train2.roc(), "report_train2.roc()")
+
+session.add(report.prediction_sig['xgboost'], "report.prediction_sig['xgboost2']")
+session.add(report2.prediction_sig['xgboost2'], "report2.prediction_sig['xgboost2']")
+
+session.add(report.prediction_bck['xgboost'], "report.prediction_bck['xgboost2']")
+session.add(report2.prediction_bck['xgboost2'], "report2.prediction_bck['xgboost2']")
+
+session.add(report.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "report.prediction_pdf()")
+session.add(report2.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "report2.prediction_pdf()")
+
