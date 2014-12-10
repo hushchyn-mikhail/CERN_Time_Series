@@ -806,3 +806,7 @@ session.add(report2.prediction_bck['xgboost2'], "report2.prediction_bck['xgboost
 session.add(report.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "report.prediction_pdf()")
 session.add(report2.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "report2.prediction_pdf()")
 
+# <codecell>
+
+session.commit("Variables added")
+

@@ -809,3 +809,7 @@ session.add(report2.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "
 # <codecell>
 
 session.commit("Variables added")
+
+# <codecell>
+
+session.commit("Variables added")
