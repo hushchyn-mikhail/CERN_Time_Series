@@ -875,3 +875,26 @@ session.commit("test")
 # <codecell>
 
 session.commit("Variables added")
+
+# <codecell>
+
+session.add(report.roc(), "report.roc()")
+session.add(report2.roc(), "report2.roc()")
+session.add(report_train.roc(), "report_train.roc()")
+session.add(report_train2.roc(), "report_train2.roc()")
+
+session.add(report.prediction_sig['xgboost'], "report.prediction_sig['xgboost2']")
+session.add(report2.prediction_sig['xgboost2'], "report2.prediction_sig['xgboost2']")
+
+session.add(report.prediction_bck['xgboost'], "report.prediction_bck['xgboost2']")
+session.add(report2.prediction_bck['xgboost2'], "report2.prediction_bck['xgboost2']")
+
+session.add(report.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "report.prediction_pdf()")
+session.add(report2.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "report2.prediction_pdf()")
+
+a=1
+session.add(a, "test")
+
+# <codecell>
+
+session.commit("Variables added")
