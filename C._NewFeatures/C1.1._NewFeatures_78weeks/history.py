@@ -868,3 +868,7 @@ session.add(report2.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "
 a=1
 session.add(a, "test")
 
+# <codecell>
+
+session.commit("test")
+

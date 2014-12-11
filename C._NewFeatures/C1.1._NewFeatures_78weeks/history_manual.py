@@ -871,3 +871,7 @@ session.add(a, "test")
 # <codecell>
 
 session.commit("test")
+
+# <codecell>
+
+session.commit("Variables added")
