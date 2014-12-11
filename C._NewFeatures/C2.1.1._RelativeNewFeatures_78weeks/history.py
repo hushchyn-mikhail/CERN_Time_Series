@@ -471,7 +471,7 @@ series = series[(iron(report.prediction_sig['xgboost']) > 0.4)&(iron(report.pred
 print "Number of series is ", series.shape[0]
 for i in range(0, series.shape[0]):
     cur_serie = series.irow(i)
-    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.01)
+    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
 plt.xlim(1,78)
 plt.xlabel('Weeks')
 plt.ylabel('Nb of usages')
@@ -883,19 +883,24 @@ session = ipykee.Session(project_name="C._NewFeatures")
 
 # <codecell>
 
-#session.commit("Upload by ipykee. Time series for several popularity intervals added. Nb of usages = !from 0. !to 1.")
+session.add(report.roc(), "report.roc()")
+session.add(report2.roc(), "report2.roc()")
+session.add(report_train.roc(), "report_train.roc()")
+session.add(report_train2.roc(), "report_train2.roc()")
+
+session.add(report.prediction_sig['xgboost'], "report.prediction_sig['xgboost2']")
+session.add(report2.prediction_sig['xgboost2'], "report2.prediction_sig['xgboost2']")
+
+session.add(report.prediction_bck['xgboost'], "report.prediction_bck['xgboost2']")
+session.add(report2.prediction_bck['xgboost2'], "report2.prediction_bck['xgboost2']")
+
+session.add(report.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "report.prediction_pdf()")
+session.add(report2.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "report2.prediction_pdf()")
+
+a=1
+session.add(a, "test")
 
 # <codecell>
 
-#Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
-series = series[(iron(report.prediction_sig['xgboost']) > 0.4)&(iron(report.prediction_sig['xgboost']) < 0.8)]
-print "Number of series is ", series.shape[0]
-for i in range(0, series.shape[0]):
-    cur_serie = series.irow(i)
-    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
-plt.xlim(1,78)
-plt.xlabel('Weeks')
-plt.ylabel('Nb of usages')
-plt.show()
+#session.commit("Upload by ipykee. Time series for several popularity intervals added. Nb of usages = !from 0. !to 1.")
 
