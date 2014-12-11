@@ -227,3 +227,43 @@ session = ipykee.Session(project_name="Overview")
 # <codecell>
 
 session.commit("First commit")
+
+# <codecell>
+
+HTML('<img src="https://github.com/hushchyn-mikhail/CERN_Time_Series/blob/master/images/TimeLine.png" width=400 height=200/>')
+
+# <codecell>
+
+HTML('<img src="github.com/hushchyn-mikhail/CERN_Time_Series/blob/master/images/TimeLine.png" width=400 height=200/>')
+
+# <codecell>
+
+HTML('<img href="github.com/hushchyn-mikhail/CERN_Time_Series/blob/master/images/TimeLine.png" width=400 height=200/>')
+
+# <codecell>
+
+import Image
+
+# by default Image data are embedded
+picUrl = 'https://pyradi.googlecode.com/svn/trunk/pyradi/doc/_images/pyradi.png'
+Embed  = Image(picUrl)
+display(Embed)
+
+# <codecell>
+
+
+
+from IPython.display import display
+from IPython.display import Image
+from IPython.display import HTML
+
+
+
+# by default Image data are embedded
+picUrl = 'https://pyradi.googlecode.com/svn/trunk/pyradi/doc/_images/pyradi.png'
+Embed  = Image(picUrl)
+display(Embed)
+
+# <codecell>
+
+session.commit("Images fixed")
