@@ -3,53 +3,40 @@
 
 # <codecell>
 
-#get variables
-import ipykee
-keeper = ipykee.Keeper("C._NewFeatures")
-session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
-vars_c21 = session.get_variables("master")
-variables.keys()
+from IPython import parallel
+clients = parallel.Client(profile='ssh-ipy2.0')
+clients.block = True  # use synchronous computations
+print clients.ids
 
 # <codecell>
 
-#get variables
-import ipykee
-keeper = ipykee.Keeper("C._NewFeatures")
-session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
-vars_c21 = session.get_variables("master")
-#variables.keys()
+# from IPython import parallel
+# clients = parallel.Client(profile='ssh-ipy2.0')
+# clients.block = True  # use synchronous computations
+# print clients.ids
 
 # <codecell>
 
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = (1.0 + non_nan_res['66'].values)/2.0
-y_score = non_nan_res['Error_test'].values
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
+#%%px
 %matplotlib inline
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-results = pd.read_csv('ann_res.csv')
-results.columns
+#Load original data
+data = pd.read_csv('popularity-728days_my.csv')
+
+head = list(data.columns[:21]) + range(1,105)
+data = pd.DataFrame(columns=head, data=data.values)
 
 # <codecell>
 
-non_nan_res = results[pd.isnull(results).sum(axis=1)==0]
+#%%px
+#Select data
+selection = ((data['Now'] - data['Creation-week']) > 26)&((data['Now'] - data['FirstUsage']) > 26)&((data[78] - data[1]) != 0)
+data_sel = data[selection].copy()
+#data_sel = data.copy()
+print data_sel.shape
 
 # <codecell>
 
@@ -200,6 +187,117 @@ print param3
 
 # <codecell>
 
+def ANN(rows_range):
+    
+    import neurolab as nl
+    keys = [str(i) for i in range(1,param3+1)]
+    results = pd.DataFrame(columns=["Index","Error_train","Error_valid", "Error_test"]+keys)
+
+    param4 = fh+10
+    f = nl.trans.TanSig()
+
+    for row in rows_range:
+        print row
+        #Take a row and transfrom it
+        ts_train = df_ts_rolling_sum.irow([row])
+        time_serie_table, time_serie_4predict = N_M_Transformation(ts_train, ws, fh)
+        #Transform the row's values to the [0,1] values
+        time_serie_table = time_serie_table/(1.0*time_serie_table.max())
+        time_serie_4predict = time_serie_4predict/(1.0*time_serie_4predict.max())
+        x_cols = ['x'+str(i) for i in range(1,ws+1)]
+        #Get train data
+        x_train = time_serie_table[x_cols].irow(range(0,param3-param4)).values
+        y_train = time_serie_table['y'].irow(range(0,param3-param4)).values
+        size = len(y_train)
+        y_train = y_train.reshape(len(y_train),1)
+        #Get validation data
+        x_valid = time_serie_table[x_cols].irow(range(param3-param4,param3-fh)).values
+        y_valid = time_serie_table['y'].irow(range(param3-param4,param3-fh)).values
+        y_valid = y_valid.reshape(len(y_valid),1)
+        #Get test data
+        x_test = time_serie_table[x_cols].irow(range(param3-fh,param3)).values
+        y_test = time_serie_table['y'].irow(range(param3-fh,param3)).values
+        y_test = y_test.reshape(len(y_test),1)
+        # Create network with 2 layers and random initialized
+        init = []
+        for i in range(0, x_train.shape[1]):
+            init.append([0,1])
+        min_error = 10
+        for k in range(0,10):
+            cur_net = nl.net.newff(init,[5,1],transf=[f, f])
+            for l in cur_net.layers:
+                l.initf = nl.init.init_rand(l, min=-0.5, max=0.5, init_prop='w')
+            # new initialization
+            cur_net.init()
+            if k==0:
+                net=cur_net
+                error = 10
+
+            # Train network
+            cur_net.trainf = nl.train.train_bfgs
+            cur_error = cur_net.train(x_train, f(y_train), epochs=300, show=0, goal=0.00000000001)
+
+            out_train = cur_net.sim(x_train)
+            out_valid = cur_net.sim(x_valid)
+
+            tar_out_valid = np.concatenate((y_valid, out_valid), axis=1)
+            tar_out_train = np.concatenate((y_train, out_train), axis=1)
+            tar_out = np.concatenate((tar_out_train, tar_out_valid), axis=0)
+            max_abs = np.abs(tar_out[:,0]-tar_out[:,1])
+            maef = nl.error.MAE()
+            saef = nl.error.SAE()
+            msef = nl.error.MSE()
+            #check_error = maef(tar_out_valid)
+            #check_error = msef(tar_out)
+            #check_error = saef(tar_out)
+            #check_error = cur_error[-1]
+            check_error = max_abs.max()
+
+            print check_error
+            if check_error<min_error:
+                min_error = check_error
+                net = cur_net
+                error = cur_error
+
+
+        # Simulate network
+        print 'min_error', min_error
+        out_train = net.sim(x_train)
+
+        # Plot result
+#         plt.subplot(1,1,1)
+#         plt.plot(error)
+#         plt.xlabel('Epoch number')
+#         plt.ylabel('error (default SSE)')
+#         plt.show()
+
+        out_valid = net.sim(x_valid)
+        out_test = net.sim(x_test)
+#         plt.subplot(1,1,1)
+#         plt.plot(f(np.concatenate((y_train,y_valid, y_test),axis=0)))
+#         plt.plot(np.concatenate((out_train,out_valid,out_test),axis=0))
+#         plt.show()
+
+
+        #Get results
+        index = ts_train.index[0]
+        error_train = maef(tar_out_train)
+        error_valid = maef(tar_out_valid)
+        tar_out_test = np.concatenate((y_test, out_test), axis=1)
+        error_test = maef(tar_out_test)
+        values = list(np.concatenate((out_train,out_valid,out_test)))
+        values = np.reshape(values,(len(values),))
+        data_dict = {"Index":[index],"Error_train":[error_train],"Error_valid":[error_valid], "Error_test":[error_test]}
+        for i in range(1,param3+1):
+            data_dict[str(i)] = [values[i-1]]
+        new_row = pd.DataFrame(data=data_dict)
+        results = results.append(new_row)
+        
+    #results.to_csv('/mnt/w76/notebook/datasets/mikhail/ann_res.csv',mode='a',header=False)
+    return results
+
+# <codecell>
+
 %matplotlib inline
 import numpy as np
 import pandas as pd
@@ -210,7 +308,41 @@ results.columns
 
 # <codecell>
 
-non_nan_res = results[pd.isnull(results).sum(axis=1)==0]
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)]
+
+# <codecell>
+
+df_ts_rolling_sum.columns
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
+for col in df_ts_rolling_sum.columns:
+    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+
+# <codecell>
+
+print N//3
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=60
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3-fh,param3-fh], [-1,1], color='black')
+    plt.plot([param3-fh-10,param3-fh-10], [-1,1], color='black')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
 
 # <codecell>
 
@@ -237,7 +369,7 @@ y_last=[]
 for i in non_nan_res['Index']:
     i=int(i)
     cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[-1]/(1.0*cur_serie.max()))
+    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
 y_last = np.array(y_last)
 
 # <codecell>
@@ -246,191 +378,8 @@ figure(figsize=(15, 10))
 #print predict value for the last point
 subplot(2,2,1)
 values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=50, label='y_last=0')
-plt.hist(values[y_last!=0], bins=50, label='y_last!=0')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
 plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
 plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_test'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
-plt.title('Relative test error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = (1.0 + non_nan_res['66'].values)/2.0
-y_score = non_nan_res['Error_test'].values
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = (1.0 + non_nan_res['66'].values)/2.0
-y_score = non_nan_res['Error_valid'].values
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = (1.0 + non_nan_res['66'].values)/2.0
-y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = (1.0 + non_nan_res['66'].values)/2.0
-y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+1.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = (1.0 + non_nan_res['66'].values)/2.0
-y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = (1.0 + non_nan_res['66'].values)/2.0
-y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+0.99)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = (1.0 + non_nan_res['66'].values)/2.0
-y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+0.09)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = (1.0 + non_nan_res['66'].values)/2.0
-y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=50, label='y_last=0')
-plt.hist(values[y_last!=0], bins=50, label='y_last!=0')
 plt.title('Predict values')
 plt.legend(loc='best')
 #plt.show()
@@ -464,25 +413,145 @@ plt.legend(loc='best')
 
 # <codecell>
 
-#get variables
-import ipykee
-keeper = ipykee.Keeper("C._NewFeatures")
-session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
-vars_c21 = session.get_variables("master")
-#variables.keys()
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
 
 # <codecell>
 
-# #get variables
+#get variables
 # import ipykee
 # keeper = ipykee.Keeper("C._NewFeatures")
 # session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
 # vars_c21 = session.get_variables("master")
-# #variables.keys()
+#variables.keys()
 
 # <codecell>
 
 import ipykee
 #ipykee.create_project(project_name="D._UsageForecast", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
 session = ipykee.Session(project_name="D._UsageForecast")
+
+# <codecell>
+
+def ANN(rows_range):
+    
+    import neurolab as nl
+    keys = [str(i) for i in range(1,param3+1)]
+    results = pd.DataFrame(columns=["Index","Error_train","Error_valid", "Error_test"]+keys)
+
+    param4 = fh+10
+    f = nl.trans.TanSig()
+
+    for row in rows_range:
+        print row
+        #Take a row and transfrom it
+        ts_train = df_ts_rolling_sum.irow([row])
+        time_serie_table, time_serie_4predict = N_M_Transformation(ts_train, ws, fh)
+        #Transform the row's values to the [0,1] values
+        time_serie_table = time_serie_table/(1.0*time_serie_table.max())
+        time_serie_4predict = time_serie_4predict/(1.0*time_serie_4predict.max())
+        x_cols = ['x'+str(i) for i in range(1,ws+1)]
+        #Get train data
+        x_train = time_serie_table[x_cols].irow(range(0,param3-param4)).values
+        y_train = time_serie_table['y'].irow(range(0,param3-param4)).values
+        size = len(y_train)
+        y_train = y_train.reshape(len(y_train),1)
+        #Get validation data
+        x_valid = time_serie_table[x_cols].irow(range(param3-param4,param3-fh)).values
+        y_valid = time_serie_table['y'].irow(range(param3-param4,param3-fh)).values
+        y_valid = y_valid.reshape(len(y_valid),1)
+        #Get test data
+        x_test = time_serie_table[x_cols].irow(range(param3-fh,param3)).values
+        y_test = time_serie_table['y'].irow(range(param3-fh,param3)).values
+        y_test = y_test.reshape(len(y_test),1)
+        # Create network with 2 layers and random initialized
+        init = []
+        for i in range(0, x_train.shape[1]):
+            init.append([0,1])
+        min_error = 10
+        for k in range(0,10):
+            cur_net = nl.net.newff(init,[5,1],transf=[f, f])
+            for l in cur_net.layers:
+                l.initf = nl.init.init_rand(l, min=-0.5, max=0.5, init_prop='w')
+            # new initialization
+            cur_net.init()
+            if k==0:
+                net=cur_net
+                error = 10
+
+            # Train network
+            cur_net.trainf = nl.train.train_bfgs
+            cur_error = cur_net.train(x_train, y_train, epochs=300, show=0, goal=0.00000000001)
+
+            out_train = cur_net.sim(x_train)
+            out_valid = cur_net.sim(x_valid)
+
+            tar_out_valid = np.concatenate((y_valid, out_valid), axis=1)
+            tar_out_train = np.concatenate((y_train, out_train), axis=1)
+            tar_out = np.concatenate((tar_out_train, tar_out_valid), axis=0)
+            max_abs = np.abs(tar_out[:,0]-tar_out[:,1])
+            maef = nl.error.MAE()
+            saef = nl.error.SAE()
+            msef = nl.error.MSE()
+            #check_error = maef(tar_out_valid)
+            #check_error = msef(tar_out)
+            #check_error = saef(tar_out)
+            #check_error = cur_error[-1]
+            check_error = max_abs.max()
+
+            print check_error
+            if check_error<min_error:
+                min_error = check_error
+                net = cur_net
+                error = cur_error
+
+
+        # Simulate network
+        print 'min_error', min_error
+        out_train = net.sim(x_train)
+
+        # Plot result
+#         plt.subplot(1,1,1)
+#         plt.plot(error)
+#         plt.xlabel('Epoch number')
+#         plt.ylabel('error (default SSE)')
+#         plt.show()
+
+        out_valid = net.sim(x_valid)
+        out_test = net.sim(x_test)
+#         plt.subplot(1,1,1)
+#         plt.plot(np.concatenate((y_train,y_valid, y_test),axis=0))
+#         plt.plot(np.concatenate((out_train,out_valid,out_test),axis=0))
+#         plt.show()
+
+
+        #Get results
+        index = ts_train.index[0]
+        error_train = maef(tar_out_train)
+        error_valid = maef(tar_out_valid)
+        tar_out_test = np.concatenate((y_test, out_test), axis=1)
+        error_test = maef(tar_out_test)
+        values = list(np.concatenate((out_train,out_valid,out_test)))
+        values = np.reshape(values,(len(values),))
+        data_dict = {"Index":[index],"Error_train":[error_train],"Error_valid":[error_valid], "Error_test":[error_test]}
+        for i in range(1,param3+1):
+            data_dict[str(i)] = [values[i-1]]
+        new_row = pd.DataFrame(data=data_dict)
+        results = results.append(new_row)
+        
+    #results.to_csv('/mnt/w76/notebook/datasets/mikhail/ann_res.csv',mode='a',header=False)
+    return results
 
