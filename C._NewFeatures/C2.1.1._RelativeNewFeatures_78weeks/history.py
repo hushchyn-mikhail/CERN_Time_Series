@@ -3,27 +3,81 @@
 
 # <codecell>
 
+#get variables
+import ipykee
+keeper = ipykee.Keeper("C._NewFeatures")
+session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
+vars_c21 = session.get_variables("master")
+variables.keys()
+
+# <codecell>
+
+#get variables
+import ipykee
+keeper = ipykee.Keeper("C._NewFeatures")
+session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
+vars_c21 = session.get_variables("master")
+#variables.keys()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = non_nan_res['Error_test'].values
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
 %matplotlib inline
-%pylab inline
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+results = pd.read_csv('ann_res.csv')
+results.columns
+
+# <codecell>
+
+non_nan_res = results[pd.isnull(results).sum(axis=1)==0]
+
+# <codecell>
+
+#%%px
+%matplotlib inline
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 #Load original data
-data = pd.read_excel('popularity-728days_my.xls')
-data.columns
+data = pd.read_csv('popularity-728days_my.csv')
+
+head = list(data.columns[:21]) + range(1,105)
+data = pd.DataFrame(columns=head, data=data.values)
 
 # <codecell>
 
+#%%px
 #Select data
-selection = ((data['Now'] - data['Creation-week']) > 26)&((data['Now'] - data['FirstUsage']) > 26)&((data[78] - data[1]) != 0)&(data['FirstUsage']!=0)
+selection = ((data['Now'] - data['Creation-week']) > 26)&((data['Now'] - data['FirstUsage']) > 26)&((data[78] - data[1]) != 0)
 data_sel = data[selection].copy()
 #data_sel = data.copy()
 print data_sel.shape
 
 # <codecell>
 
-periods = range(1,79)
+#%%px
+periods = range(1,105)
 
 #------------------------------------------------------
 #Get maximum intervals and last weeks with zeros usages
@@ -69,838 +123,1822 @@ def InterMax(data_sel, periods):
         else:
             inter_rel.append(0)
                 
-        last_zeros.append(nz[-1]+data_bv['Now'].values[i]-104-data_bv['Creation-week'].values[i])
+        last_zeros.append(periods[-1] - nz[-1] + 1)
         inter_max.append(max(inter))
     
     return np.array(inter_max), np.array(last_zeros), np.array(nb_peaks), np.array(inter_mean), np.array(inter_std), np.array(inter_rel)
-#------------------------------------------------------
-def MassCenter(data_sel, periods):
-    data_bv = data_sel.copy()
-    p = np.array(periods)
-    #Get week's usages
-    for i in periods:
-        if i!=1:
-            data_bv[i] = data_sel[i] - data_sel[i-1]
-    
-    mass_center = []
-    mass_center2 = []
-    mass_moment = []
-    r_moment = []
-            
-    for i in range(0,data_bv.shape[0]):
-        center = (data_bv[periods].irow(i).values*(p+data_bv['Now'].values[i]-104-data_bv['Creation-week'].values[i])).sum()/data_bv[periods].irow(i).values.sum()
-        center2 = (data_bv[periods].irow(i).values*np.square((p+data_bv['Now'].values[i]-104-data_bv['Creation-week'].values[i]))).sum()
-        moment = (data_bv[periods].irow(i).values*np.square((p+data_bv['Now'].values[i]-104-data_bv['Creation-week'].values[i])-center)).sum()
-        r_m = moment/data_bv[periods].irow(i).values.sum()
-        mass_center.append(center)
-        mass_center2.append(center2)
-        mass_moment.append(moment)
-        r_moment.append(r_m)
-    
-    print data_bv.shape
-    print data_sel.shape
-        
-    return np.array(mass_center), np.array(mass_moment), np.array(r_moment), np.array(mass_center2)
-#------------------------------------------------------
-def Binary(data_sel, periods):
-    data_bv = data_sel.copy()
-    p = np.array(periods) - periods[0]+1
-    #Get week's usages
-    for i in periods:
-        if i!=1:
-            data_bv[i] = data_sel[i] - data_sel[i-1]
-    #Get binary representation
-    data_bv[p] = (data_bv[periods] != 0)*1
-    
-    return data_bv[p]
 
 # <codecell>
 
-#Create a Data Frame for Classifier
-df = pd.DataFrame()
-
+#%%px
 #Add features
 inter_max, last_zeros, nb_peaks, inter_mean, inter_std, inter_rel = InterMax(data_sel, periods)
-df['last-zeros'] = last_zeros
-df['inter_max'] = inter_max
-df['nb_peaks'] = nb_peaks
-df['inter_mean'] = inter_mean
-df['inter_std'] = inter_std
-df['inter_rel'] = inter_rel
-
-mass_center, mass_moment, r_moment, mass_center2 = MassCenter(data_sel, periods)
-df['mass_center'] = mass_center
-df['mass_center_sqr'] = mass_center2
-df['mass_moment'] = mass_moment
-df['r_moment'] = r_moment
+data_sel['last-zeros'] = last_zeros
+data_sel['inter_max'] = inter_max
+data_sel['nb_peaks'] = nb_peaks
+data_sel['inter_mean'] = inter_mean
+data_sel['inter_std'] = inter_std
+data_sel['inter_rel'] = inter_rel
 
 # <codecell>
 
-df['DiskSize'] = data_sel['DiskSize'].values
-df['LFNSize'] = data_sel['LFNSize'].values
-df['Nb Replicas'] = data_sel['Nb Replicas'].values
-
-df['LogDiskSize'] = np.log(data_sel['DiskSize'].values+0.00001)
-df['total_usage'] = data_sel[periods[-1]].values
-df['mean_usage'] = df['total_usage'].values/(df['nb_peaks'].values+1)
-
-df['log_total_usage'] = np.log(data_sel[periods[-1]].values+1)
-df['log_mean_usage'] = df['total_usage'].values - np.log(df['nb_peaks'].values+1)
-
-"""
-df['log_mass_center'] = np.log(mass_center+1)
-df['log_mass_moment'] = np.log(mass_moment+1)
-df['log_r_moment'] = np.log(r_moment+1)
-df['log_mass_center_sqr'] = np.log(mass_center2+1)
-
-df['log_last-zeros'] = np.log(last_zeros+1)
-df['log_inter_max'] = np.log(inter_max+1)
-df['log_nb_peaks'] = np.log(nb_peaks+1)
-df['log_inter_mean'] = np.log(inter_mean+1)
-df['log_inter_std'] = np.log(inter_std+1)
-df['log_inter_rel'] = np.log(inter_rel+1)
-
-#df['FileType'] = data_sel['FileType']
-#df['Configuration'] = data_sel['Configuration']
-#df['ProcessingPass'] = data_sel['ProcessingPass']
-"""
+#%%px
+data = data_sel[data_sel['nb_peaks']>=0]
 
 # <codecell>
 
-#Transform string features to digits
-cols_str = ['Configuration', 'ProcessingPass', 'FileType', 'Storage']
-df_str = data_sel.get(cols_str)
-
-for col in cols_str:
-    unique = np.unique(df_str[col])
-    index = range(0, len(unique))
-    mapping = dict(zip(unique, index))
-    df_str = df_str.replace({col:mapping})
-    
-df['FileType'] = df_str['FileType'].values
-df['Configuration'] = df_str['Configuration'].values
-df['ProcessingPass'] = df_str['ProcessingPass'].values
-
-other_vars = [u'Type', u'Creation-week', u'NbLFN', u'LFNSize', u'NbDisk', u'DiskSize', u'NbTape', u'TapeSize',
-              u'NbArchived', u'ArchivedSize', u'Nb Replicas', u'Nb ArchReps', u'FirstUsage']
-for i in other_vars:
-    df[i] = data_sel[i].values
-df['silence'] = df['FirstUsage']-df[u'Creation-week']
+#%%px
+data_weeks = data[range(1,105)]
 
 # <codecell>
 
-#Add Binary Vector
-bv = Binary(data_sel, periods)
-p = np.array(periods) - periods[0]+1
-for i in p:
-    df[i]=bv[i].values
-
-# <codecell>
-
-#get noremd week's usages
-data_b = data_sel.copy()
-for i in periods:
+#%%px
+df_time_series = data_weeks.copy()
+for i in range(1,105):
     if i!=1:
-        data_b[i] = data_sel[i] - data_sel[i-1]
-max_values = data_b[periods].max(axis=1)
-
-for i in periods:
-    df[i] = data_b[i].values #Not normed!!!
+        df_time_series[i] = data_weeks[i]-data_weeks[i-1]
 
 # <codecell>
 
-y_true = ((data_sel[104] - data_sel[78]) == 0).values*1
+#%%px
+param1 = 13
+df_ts_rolling_sum = pd.rolling_sum(df_time_series, window=param1,axis=1)[range(param1,105)]
 
 # <codecell>
 
-for i in df.columns:
-    plt.subplot(1,1,1)
-    plt.hist(df[i][y_true == 1].values, label='signal', color='b', alpha=0.5, bins = 20)
-    plt.hist(df[i][y_true == 0].values, label='bck', color='r', alpha=0.5, bins = 20)
-    plt.ylabel('Nb of data sets')
-    plt.legend(loc = 'best')
-    plt.title(i)
-    plt.show()
+#%%px
+ws = 13#window_size
+fh = 13#forecast horizont
+param2 = 105-param1
+
+def N_M_Transformation(time_serie, ws, fh):
+    x_cols = ['x'+str(i) for i in range(1,ws+1)]#columns names
+    time_serie_table = pd.DataFrame(columns=x_cols+['y'])
+    time_serie_4predict = pd.DataFrame(columns=x_cols)
+    #Data for train and test
+    for row_num in range(0, param2-fh-ws):
+        time_serie_table.loc[row_num] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0])\
+        +list(time_serie.icol([row_num+ws+fh]).values[0])#y variable 
+    #Data for prediction
+    for row_num in range(param2-fh-ws,param2-ws):
+        time_serie_4predict.loc[row_num-(param2-fh-ws)] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0]) 
+        #print row_num
+
+    return time_serie_table, time_serie_4predict
 
 # <codecell>
 
-#After additional selection
-"""
-for i in df_s.columns:
-    plt.subplot(1,1,1)
-    plt.hist(df_s[i][y_true_s == 1].values, label='1', color='b', alpha=0.5, bins = 20)
-    plt.hist(df_s[i][y_true_s == 0].values, label='0', color='r', alpha=0.5, bins = 20)
-    plt.legend(loc = 'best')
-    plt.title(i)
-    plt.show()
-"""
+#%%px
+param3 = param2-fh-ws
+print param3
 
 # <codecell>
 
-#
-"""
-df = df_s
-y_true = y_true_s
-df.shape
-"""
+# %%px
+# results = pd.DataFrame(columns=["Index","Error_train","Error_valid", "Error_test"]+range(0,param3))
+# results.to_csv('/mnt/w76/notebook/datasets/mikhail/ann_res.csv')
 
 # <codecell>
 
-#Preparing signal and background data for classifier
-from cern_utils import data_storage
+%matplotlib inline
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
-#Load signal and background data
-signal_data = data_storage.DataStorageDF(df[y_true == 1])
-bck_data = data_storage.DataStorageDF(df[y_true == 0])
-# Get train and test data
-signal_train, signal_test = signal_data.get_train_test(train_size=0.5)
-bck_train, bck_test = bck_data.get_train_test(train_size=0.5)
+results = pd.read_csv('ann_res.csv')
+results.columns
 
 # <codecell>
 
-#select variables for classifier
-columns = signal_data.columns
-print columns
-print '****************************************************'
-
-variables = ['last-zeros', 'mass_center', 'inter_max', 'nb_peaks', u'inter_mean', u'inter_std', u'inter_rel',
-             u'mass_moment', u'r_moment',u'FileType',
-             u'Configuration', u'ProcessingPass']#, u'Nb Replicas', ]
-    
-variables = [u'last-zeros', u'inter_max', u'nb_peaks', u'inter_mean', u'inter_std', u'inter_rel', u'mass_center',
-             u'mass_center_sqr', u'mass_moment', u'r_moment', u'DiskSize', u'LogDiskSize', u'total_usage', u'mean_usage',
-             u'FileType', u'Configuration', u'ProcessingPass', u'log_total_usage', u'log_mean_usage']+other_vars
-
-#variables = signal_data.columns
-
-print variables
-print len(variables)
+non_nan_res = results[pd.isnull(results).sum(axis=1)==0]
 
 # <codecell>
 
-import inspect
-import os
-import sys
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
 
-code_path = os.path.join(os.path.split(inspect.getfile(inspect.currentframe()))[0], "xgboost-master/wrapper")
-sys.path.append(code_path)
-
-import xgboost as xgb
-from cern_utils import xgboost_classifier
-
-
-# setup parameters for xgboost
-param = {}
-param['objective'] = 'binary:logitraw'
-param['scale_pos_weight'] = 1
-param['eta'] = 0.02
-param['max_depth'] = 6
-param['eval_metric'] = 'map'
-param['silent'] = 1
-param['nthread'] = 16
-param['min_child_weight'] = 1
-param['subsample'] = 0.8
-param['colsample_bytree'] = 1
-param['base_score'] = 0.5
-#param['num_feature'] = 10
-
-# you can directly throw param in, though we want to watch multiple metrics here 
-plst = list(param.items()) + [('eval_metric', 'map'), ('eval_metric', 'auc')]
-
-xgboost = xgboost_classifier.ClassifierXGBoost(directory='xgboost/')
-xgboost.set_params(features = variables, params = plst)
-#setup additional parameters
-xgboost.num_boost_round = 2500
-xgboost.watch = False
-xgboost.missing = None
-
-#trainig classifier
-xgboost.fit(signal_train, bck_train)#,\
-            #weight_sig=signal_train.get_data(['total_usage']).values,\
-            #weight_bck=bck_train.get_data(['total_usage']).values)
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=50, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
 
 # <codecell>
 
-# get prediction on data after classification
-from cern_utils.predictions_report import PredictionsInfo
-report = PredictionsInfo({'xgboost': xgboost}, signal_test, bck_test)
-report_train = PredictionsInfo({'xgboost': xgboost}, signal_train, bck_train)
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[-1]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
 
 # <codecell>
 
-#Plot importances of features according to trained model
-importance = xgboost.get_feature_importance()
-importance.sort(['effect'], ascending=False)[['effect']].plot(figsize=(13,3), kind='bar')
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0')
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_test'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
 
 # <codecell>
 
-#Plot learning curves to see possible overfitting of trained classifier
-from sklearn.metrics import log_loss, roc_auc_score, average_precision_score
+from sklearn.metrics import roc_curve, auc
 
-def log_loss(y_true, y_pred):
-    return log_loss(y_true, y_pred)
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = non_nan_res['Error_test'].values
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
 
-def roc_auc(y_true, y_pred, sample_weight):
-    return roc_auc_score(y_true, y_pred)  
-
-def average_precision(y_true, y_pred, sample_weight):
-    return average_precision_score(y_true, y_pred)  
-
-figure(figsize=(10, 6))
-lc_test = report.learning_curve( { 'roc_auc(test)':roc_auc}, steps=100)
-lc_train = report_train.learning_curve( { 'roc_auc(train)':roc_auc}, steps=100)
-lc_test.plots[0].plot()
-lc_train.plots[0].plot()
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
 
 # <codecell>
 
-figure(figsize=(10, 6))
-av_test = report.learning_curve( {  'average_precision(test)':average_precision}, steps=100)
-av_train = report_train.learning_curve( {  'average_precision(train)':average_precision}, steps=100)
-av_test.plots[0].plot()
-av_train.plots[0].plot()
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = non_nan_res['Error_valid'].values
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
 
 # <codecell>
 
-figure(figsize=(10, 6))
-ll_test = report.learning_curve( { 'log_loss(test)':roc_auc}, steps=100)
-ll_train = report_train.learning_curve( { 'log_loss(train)':roc_auc}, steps=100)
-ll_test.plots[0].plot()
-ll_train.plots[0].plot()
-legend( loc='best')
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
 
 # <codecell>
 
-# get prediction on data after classification
-figure(figsize=(10, 6))
-report.prediction_pdf(bins = 20, normed = True, plot_type='bar', class_type='both').plot()
-report_train.prediction_pdf(bins = 20, normed = True, class_type='both').plot()
-xlim(0, 1)
-legend(['bck(test)', 'sig(test)', 'bck(train)', 'sig(train)'], loc='best')
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+1.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
 
 # <codecell>
 
-#Correlation matrix
-#report.features_correlation_matrix().plot(show_legend=False)
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
 
 # <codecell>
 
-#Features histogramms
-#hist_var = variables[:]
-#hist_var.remove(u'NbTape')
-#hist_var.remove(u'TapeSize')
-#report.features_pdf(features=hist_var, bins = 10).plot()
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+0.99)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
 
 # <codecell>
 
-#ROC - curve
-figure(figsize=(5, 3))
-report.roc().plot()
-report_train.roc().plot()
-legend(['test', 'train'], loc='best')
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+0.09)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
 
 # <codecell>
 
-# define metric functions
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import f1_score
-from sklearn.metrics import precision_score
+from sklearn.metrics import roc_curve, auc
 
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
 
-import numpy
-
-
-def accuracy(s, b, t_s, t_b, s_NORM=1., b_NORM = 1.): 
-
-    return (s + t_b - b)/(t_s + t_b)
-
-def precision(s, b, t_s, t_b, s_NORM=1., b_NORM = 1.):
-    return 1- b/t_b
-
-report.metrics_vs_cut({'precision': precision, 'accuracy': accuracy}).plot(new_plot=True, figsize=(8, 4))
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
 
 # <codecell>
 
-figure(figsize=(10, 6))
-report.prediction_pdf(bins = 20, normed = True, plot_type='bar').plot()
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0')
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
 
 # <codecell>
 
-#Normed signal
-%pylab inline
-from cern_utils import calc_util
-iron = calc_util.classifier_flatten(report.prediction_sig['xgboost'])
-
-_ = hist(iron(report.prediction_sig['xgboost']),  histtype='bar', bins=20, alpha=0.5, label='signal')
-_ = hist(iron(report.prediction_bck['xgboost']),  histtype='bar', bins=20, alpha=0.5, label='bck')
-legend(loc='best')
+#get variables
+import ipykee
+keeper = ipykee.Keeper("C._NewFeatures")
+session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
+vars_c21 = session.get_variables("master")
+#variables.keys()
 
 # <codecell>
 
-#Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
-series = series[iron(report.prediction_sig['xgboost']) > 0.95]
-print "Number of series is ", series.shape[0]
-for i in range(0, series.shape[0]):
-    cur_serie = series.irow(i)
-    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
-plt.xlim(1,78)
-plt.xlabel('Weeks')
-plt.ylabel('Nb of usages')
-plt.show()
-
-# <codecell>
-
-#Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
-series = series[iron(report.prediction_sig['xgboost']) > 0.8]
-print "Number of series is ", series.shape[0]
-for i in range(0, series.shape[0]):
-    cur_serie = series.irow(i)
-    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
-plt.xlim(1,78)
-plt.xlabel('Weeks')
-plt.ylabel('Nb of usages')
-plt.show()
-
-# <codecell>
-
-#Plot signal_test series for an interval of antipopularity values
-series = signal_test.get_data()[periods]
-series = series[(iron(report.prediction_sig['xgboost']) > 0.4)&(iron(report.prediction_sig['xgboost']) < 0.8)]
-print "Number of series is ", series.shape[0]
-for i in range(0, series.shape[0]):
-    cur_serie = series.irow(i)
-    plt.bar(periods, cur_serie.values, width=1, bottom=0, color='b', edgecolor='b', alpha=0.1)
-plt.xlim(1,78)
-plt.xlabel('Weeks')
-plt.ylabel('Nb of usages')
-plt.show()
-
-# <codecell>
-
-from cern_utils import calc_util
-
-def CondSize(report, signal_test, bck_test, classifier='xgboost', cut=0.6, peaks=5, imax=26):
-
-    iron = calc_util.classifier_flatten(report.prediction_sig[classifier])
-    
-    cond_sig = (iron(report.prediction_sig[classifier]) < cut)\
-    &(signal_test.get_data(['nb_peaks']).values<=peaks)[:,0]\
-    &(signal_test.get_data(['inter_max']).values>=imax)[:,0]
-    
-    cond_bck = (iron(report.prediction_bck[classifier]) < cut)\
-    &(bck_test.get_data(['nb_peaks']).values<=peaks)[:,0]\
-    &(bck_test.get_data(['inter_max']).values>=imax)[:,0]
-
-    nzrs = (signal_test.get_data(['Nb Replicas']).values >= 1)[:,0]
-    nzrb = (bck_test.get_data(['Nb Replicas']).values >= 1)[:,0]
-
-    sz_signal=signal_test.get_data(['DiskSize'])[(cond_sig)&nzrs].values.sum()\
-    +bck_test.get_data(['DiskSize'])[(cond_bck)&nzrb].values.sum()\
-    -signal_test.get_data(['LFNSize'])[(cond_sig)&nzrs].values.sum()\
-    -bck_test.get_data(['LFNSize'])[(cond_bck)&nzrb].values.sum()
-
-    return sz_signal
-
-def RFiles(report, signal_test, bck_test, classifier='xgboost', mincut=0.01, maxcut=1, N=100, pq=95):
-    print "Total number of the 'signal' files is ", signal_test.get_indices().shape[0]
-    print "Total number of files is ", signal_test.get_indices().shape[0]+bck_test.get_indices().shape[0]
-    
-    step = (maxcut - mincut)/N
-    cuts = [mincut + step*i for i in range(0, N+1)]
-    
-    iron = calc_util.classifier_flatten(report.prediction_sig[classifier])
-    x=cuts
-    
-    nb_signals = []
-    nb_true_signals = []
-    nb_rels = []
-    cut_pq = 1
-    
-    for i in cuts:
-        nb_signal=((iron(report.prediction[classifier]) >= i)*1).sum()
-        nb_true_signal=((iron(report.prediction_sig[classifier]) >= i)*1).sum()
-        
-        if nb_signal!=0:
-            nb_rel=float(nb_true_signal)/float(nb_signal)*100
-        else:
-            nb_rel=100
-        
-        if cut_pq==1 and nb_rel>=pq:
-            cut_pq=i
-        
-        nb_signals.append(nb_signal)
-        nb_true_signals.append(nb_true_signal)
-        nb_rels.append(nb_rel)
-
-    
-    plt.figure(figsize=(5, 3))
-    plt.subplot(1,1,1)
-    plt.plot(x, nb_signals, 'b', label = 'nb signal files')
-    plt.plot(x, nb_true_signals, 'r', label = 'nb true signal files')
-    plt.legend(loc = 'best')
-    plt.show()
-    
-    plt.figure(figsize=(5, 3))
-    plt.subplot(1,1,1)
-    plt.plot(x, nb_rels, 'r', label = 'ratio of the true signals to the signals(%)')
-    plt.legend(loc = 'best')
-    plt.show()
-    
-    return cut_pq
-    
-def RSize(report, signal_test, bck_test, classifier='xgboost', mincut=0.01, maxcut=1, N=100, cond=0.9, Flag=False, pq=95, s_pq=90):
-    print "Total memory can be released is ", signal_test.get_data(['DiskSize']).values.sum()
-    print "Total memory is ", signal_test.get_data(['DiskSize']).values.sum()+bck_test.get_data(['DiskSize']).values.sum()
-    
-    step = (maxcut - mincut)/N
-    cuts = [mincut + step*i for i in range(0, N+1)]
-    
-    iron = calc_util.classifier_flatten(report.prediction_sig[classifier])
-    x=cuts
-    
-    sz_signals = []
-    sz_true_signals = []
-    sz_rels = []
-    cut_pq = 1
-    s_cut_pq = 1
-    
-    nzrs = (signal_test.get_data(['Nb Replicas']).values >= 1)[:,0]
-    nzrb = (bck_test.get_data(['Nb Replicas']).values >= 1)[:,0]
-    
-    for i in cuts:
-        if i>=cond:
-            sz_signal=signal_test.get_data(['DiskSize'])[(iron(report.prediction_sig[classifier]) >= i)].values.sum()\
-            +bck_test.get_data(['DiskSize'])[(iron(report.prediction_bck[classifier]) >= i)].values.sum()
-            
-            sz_true_signal=signal_test.get_data(['DiskSize'])[(iron(report.prediction_sig[classifier]) >= i)].values.sum()
-            
-            if sz_signal!=0:
-                sz_rel=float(sz_true_signal)/float(sz_signal)*100.
-            else:
-                sz_rel=100
-                
-            if cut_pq==1 and sz_rel>=pq:
-                cut_pq=i
-            if s_cut_pq==1 and sz_rel>=s_pq:
-                s_cut_pq=i
-        else:
-            sz_signal=signal_test.get_data(['DiskSize'])[(iron(report.prediction_sig[classifier]) >= i)&nzrs].values.sum()\
-            +bck_test.get_data(['DiskSize'])[(iron(report.prediction_bck[classifier]) >= i)&nzrb].values.sum()\
-            -signal_test.get_data(['LFNSize'])[(iron(report.prediction_sig[classifier]) >= i)&nzrs].values.sum()\
-            -bck_test.get_data(['LFNSize'])[(iron(report.prediction_bck[classifier]) >= i)&nzrb].values.sum()
-            
-            sz_true_signal=signal_test.get_data(['DiskSize'])[(iron(report.prediction_sig[classifier]) >= i)&nzrs].values.sum()\
-            -signal_test.get_data(['LFNSize'])[(iron(report.prediction_sig[classifier]) >= i)&nzrs].values.sum()
-            
-            if sz_signal!=0:
-                sz_rel=float(sz_true_signal)/float(sz_signal)*100.
-            else:
-                sz_rel=100
-
-            if cut_pq==1 and sz_rel>=pq:
-                cut_pq=i
-            if s_cut_pq==1 and sz_rel>=s_pq:
-                s_cut_pq=i
-
-        sz_signals.append(sz_signal)
-        sz_true_signals.append(sz_true_signal)
-        sz_rels.append(sz_rel)
-
-    
-    if Flag==True:
-        plt.figure(figsize=(5, 3))
-        plt.subplot(1,1,1)
-        plt.plot(x, sz_signals, 'b', label = 'signal files size')
-        plt.plot(x, sz_true_signals, 'r', label = 'true signal files size')
-        plt.legend(loc = 'best')
-        plt.show()
-    
-        plt.figure(figsize=(5, 3))
-        plt.subplot(1,1,1)
-        plt.plot(x, sz_rels, 'r')
-        plt.title('Ratio(%)')
-        plt.legend(loc = 'best')
-        plt.show()
-    else:
-        plt.figure(figsize=(5, 3))
-        plt.subplot(1,1,1)
-        plt.plot(x, sz_signals, 'b', label = 'released memory')
-        plt.legend(loc = 'best')
-        plt.show()
-        
-    return cut_pq, s_cut_pq
-
-# <codecell>
-
-CondSize(report, signal_test, bck_test, classifier='xgboost', cut=0.6, peaks=5, imax=26)
-
-# <codecell>
-
-cut_1, s_cut_1 = RSize(report, signal_test, bck_test, classifier='xgboost', mincut=0.1, maxcut=1, N=100, cond=0, Flag=True)
-print cut_1, s_cut_1
-
-# <codecell>
-
-RSize(report, signal_test, bck_test, classifier='xgboost', mincut=0.01, maxcut=1, N=1000, cond=1.1)
-
-# <codecell>
-
-cut_pq11 = RFiles(report, signal_test, bck_test, classifier='xgboost', mincut=0.001, maxcut=1, N=1000)
-print "cut_pq11 is ", cut_pq11
-
-# <codecell>
-
-xgboost2 = xgboost_classifier.ClassifierXGBoost(directory='xgboost2/')
-xgboost2.set_params(features = variables, params = plst)
-#setup additional parameters
-xgboost2.num_boost_round = 1500
-xgboost2.watch = False
-
-#trainig classifier
-xgboost2.fit(signal_test, bck_test)#,\
-            #weight_sig=signal_train.get_data(['total_usage']).values,\
-            #weight_bck=bck_train.get_data(['total_usage']).values)
-
-# <codecell>
-
-# get prediction on data after classification
-from cern_utils.predictions_report import PredictionsInfo
-report2 = PredictionsInfo({'xgboost2': xgboost2}, signal_train, bck_train)
-report_train2 = PredictionsInfo({'xgboost2': xgboost2}, signal_test, bck_test)
-
-# <codecell>
-
-#Plot importances of features according to trained model
-importance2 = xgboost2.get_feature_importance()
-importance2.sort(['effect'], ascending=False)[['effect']].plot(figsize=(13,3), kind='bar')
-
-# <codecell>
-
-#Plot learning curves to see possible overfitting of trained classifier
-from sklearn.metrics import log_loss, roc_auc_score, average_precision_score
-
-def log_loss(y_true, y_pred):
-    return log_loss(y_true, y_pred)
-
-def roc_auc(y_true, y_pred, sample_weight):
-    return roc_auc_score(y_true, y_pred)  
-
-def average_precision(y_true, y_pred, sample_weight):
-    return average_precision_score(y_true, y_pred)  
-
-figure(figsize=(10, 6))
-lc_test2 = report2.learning_curve( { 'roc_auc(test)':roc_auc}, steps=100)
-lc_train2 = report_train2.learning_curve( { 'roc_auc(train)':roc_auc}, steps=100)
-lc_test2.plots[0].plot()
-lc_train2.plots[0].plot()
-
-# <codecell>
-
-figure(figsize=(10, 6))
-av_test2 = report2.learning_curve( {  'average_precision(test)':average_precision}, steps=100)
-av_train2 = report_train2.learning_curve( {  'average_precision(train)':average_precision}, steps=100)
-av_test2.plots[0].plot()
-av_train2.plots[0].plot()
-
-# <codecell>
-
-figure(figsize=(10, 6))
-ll_test2 = report2.learning_curve( { 'log_loss(test)':roc_auc}, steps=100)
-ll_train2 = report_train2.learning_curve( { 'log_loss(train)':roc_auc}, steps=100)
-ll_test2.plots[0].plot()
-ll_train2.plots[0].plot()
-legend( loc='best')
-
-# <codecell>
-
-# get prediction on data after classification
-figure(figsize=(10, 6))
-report2.prediction_pdf(bins = 20, normed = True, plot_type='bar', class_type='both').plot()
-report_train2.prediction_pdf(bins = 20, normed = True, class_type='both').plot()
-xlim(0, 1)
-legend(['bck(test)', 'sig(test)', 'bck(train)', 'sig(train)'], loc='best')
-
-# <codecell>
-
-#ROC - curve
-figure(figsize=(5, 3))
-report2.roc().plot()
-report_train2.roc().plot()
-legend(['test', 'train'], loc='best')
-
-# <codecell>
-
-# define metric functions
-report2.metrics_vs_cut({'precision': precision, 'accuracy': accuracy}).plot(new_plot=True, figsize=(8, 4))
-
-# <codecell>
-
-figure(figsize=(10, 6))
-report2.prediction_pdf(bins = 10, normed = False, plot_type='bar').plot()
-
-# <codecell>
-
-#Normed signal
-%pylab inline
-from cern_utils import calc_util
-iron2 = calc_util.classifier_flatten(report2.prediction_sig['xgboost2'])
-
-_ = hist(iron2(report2.prediction_sig['xgboost2']),  histtype='bar', bins=10, alpha=0.5, label='signal', color='b')
-_ = hist(iron2(report2.prediction_bck['xgboost2']),  histtype='bar', bins=10, alpha=0.5, label='bck', color='r')
-legend(loc='best', fontsize='xx-large')
-
-# <codecell>
-
-#Normed signal
-%pylab inline
-from cern_utils import calc_util
-iron2 = calc_util.classifier_flatten(report2.prediction_sig['xgboost2'])
-
-_ = hist(report2.prediction_sig['xgboost2'],  histtype='bar', bins=10, alpha=0.5, label='signal', color='b')
-_ = hist(report2.prediction_bck['xgboost2'],  histtype='bar', bins=10, alpha=0.5, label='bck', color='r')
-legend(loc='best',fontsize='xx-large')
-
-# <codecell>
-
-cut_2, s_cut_2 = RSize(report2, signal_train, bck_train, classifier='xgboost2', mincut=0.01, maxcut=1, N=100, cond=0, Flag=True)
-print cut_2, s_cut_2
-
-# <codecell>
-
-CondSize(report2, signal_train, bck_train, classifier='xgboost2', cut=0.6, peaks=5, imax=26)
-
-# <codecell>
-
-RSize(report2, signal_train, bck_train, classifier='xgboost2', mincut=0.01, maxcut=1, N=1000, cond=1.1)
-
-# <codecell>
-
-cut_pq22 = RFiles(report2, signal_train, bck_train, classifier='xgboost2', mincut=0.001, maxcut=1, N=1000)
-print "cut_pq is ", cut_pq22
-
-# <codecell>
-
-def BraveSt(report, classifier, cut, signal, bck):
-    
-    iron = calc_util.classifier_flatten(report.prediction_sig[classifier])
-    memory = signal.get_data(['DiskSize'])[iron(report.prediction_sig[classifier]) >= cut].values.sum()\
-    +bck.get_data(['DiskSize'])[iron(report.prediction_bck[classifier]) >= cut].values.sum()
-    
-    return memory
-
-def SafeSt(report, classifier, cut, signal, bck):
-    
-    iron = calc_util.classifier_flatten(report.prediction_sig[classifier])
-    
-    nzrs = (signal.get_data(['Nb Replicas']).values >= 1)[:,0]
-    nzrb = (bck.get_data(['Nb Replicas']).values >= 1)[:,0]
-
-    memory = signal.get_data(['DiskSize'])[(iron(report.prediction_sig[classifier]) >= cut)&nzrs].values.sum()\
-    +bck.get_data(['DiskSize'])[(iron(report.prediction_bck[classifier]) >= cut)&nzrb].values.sum()\
-    -signal.get_data(['LFNSize'])[(iron(report.prediction_sig[classifier]) >= cut)&nzrs].values.sum()\
-    -bck.get_data(['LFNSize'])[(iron(report.prediction_bck[classifier]) >= cut)&nzrb].values.sum()
-    
-    return memory
-
-def CombineSt(report, classifier, s_cut, cut, signal, bck):
-    
-    iron = calc_util.classifier_flatten(report.prediction_sig[classifier])
-    
-    nzrs = (signal.get_data(['Nb Replicas']).values >= 1)[:,0]
-    nzrb = (bck.get_data(['Nb Replicas']).values >= 1)[:,0]
-    
-    memory231 = signal.get_data(['DiskSize'])[(iron(report.prediction_sig[classifier]) >= s_cut)&nzrs].values.sum()\
-    +bck.get_data(['DiskSize'])[(iron(report.prediction_bck[classifier]) >= s_cut)&nzrb].values.sum()\
-    -signal.get_data(['LFNSize'])[(iron(report.prediction_sig[classifier]) >= s_cut)&nzrs].values.sum()\
-    -bck.get_data(['LFNSize'])[(iron(report.prediction_bck[classifier]) >= s_cut)&nzrb].values.sum()
-
-    memory232 = signal.get_data(['DiskSize'])[(iron(report.prediction_sig[classifier]) >= cut)&nzrs].values.sum()\
-    +bck.get_data(['DiskSize'])[(iron(report.prediction_bck[classifier]) >= cut)&nzrb].values.sum()\
-    -signal.get_data(['LFNSize'])[(iron(report.prediction_sig[classifier]) >= cut)&nzrs].values.sum()\
-    -bck.get_data(['LFNSize'])[(iron(report.prediction_bck[classifier]) >= cut)&nzrb].values.sum()
-
-    memory233 = signal.get_data(['DiskSize'])[iron(report.prediction_sig[classifier]) >= cut].values.sum()\
-    +bck.get_data(['DiskSize'])[iron(report.prediction_bck[classifier]) >= cut].values.sum()
-
-    memory23 = memory231-memory232+memory233
-    
-    return memory23
-
-
-#Selection
-sel = ((data['Now'] - data['Creation-week']) > 26)&((data['Now'] - data['FirstUsage']) > 26)&((data[78] - data[1]) == 0)
-memory1 = data[sel].get('DiskSize').values.sum()
-print memory1
-
-def Totals(signal, bck):
-    total = signal.get_data(['DiskSize']).values.sum()+bck.get_data(['DiskSize']).values.sum()
-    return total
-    
-def CanRel(signal, bck):
-    can_released = signal.get_data(['DiskSize']).values.sum()
-    return can_released
-
-# <codecell>
-
-#Selection
-sel = ((data['Now'] - data['Creation-week']) > 26)&((data['Now'] - data['FirstUsage']) > 26)&((data[78] - data[1]) == 0)
-check = ((data[sel][104] - data[sel][52]) == 0).values*1
-memory1 = data[sel].get('DiskSize').values.sum()
-memory_check = (data[sel].get('DiskSize').values*check).sum()
-print check.sum()-check.shape[0]
-print memory1
-print memory_check
-
-# <codecell>
-
-#Rare usage
-memory3 = CondSize(report2, signal_train, bck_train, classifier='xgboost2', cut=s_cut_1, peaks=3, imax=26)\
-+CondSize(report, signal_test, bck_test, classifier='xgboost', cut=s_cut_2, peaks=3, imax=26)
-print memory3
-
-# <codecell>
-
-#Using functions
-memory_brave = memory1+BraveSt(report, 'xgboost', cut_1, signal_test, bck_test)\
-+BraveSt(report2, 'xgboost2', cut_2, signal_train, bck_train)
-
-memory_safe = memory1+SafeSt(report, 'xgboost', s_cut_1, signal_test, bck_test)\
-+SafeSt(report2, 'xgboost2', s_cut_2, signal_train, bck_train)
-
-memory_combine = memory1+CombineSt(report, 'xgboost', s_cut_1, cut_1, signal_test, bck_test)\
-+CombineSt(report2, 'xgboost2', s_cut_2, cut_2, signal_train, bck_train)
-
-print memory_brave
-print memory_safe
-print memory_combine
+# #get variables
+# import ipykee
+# keeper = ipykee.Keeper("C._NewFeatures")
+# session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
+# vars_c21 = session.get_variables("master")
+# #variables.keys()
 
 # <codecell>
 
 import ipykee
-session = ipykee.Session(project_name="C._NewFeatures")
+#ipykee.create_project(project_name="D._UsageForecast", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
+session = ipykee.Session(project_name="D._UsageForecast")
 
 # <codecell>
 
-session.add(report.roc(), "report.roc()")
-session.add(report2.roc(), "report2.roc()")
-session.add(report_train.roc(), "report_train.roc()")
-session.add(report_train2.roc(), "report_train2.roc()")
-
-session.add(report.prediction_sig['xgboost'], "report.prediction_sig['xgboost2']")
-session.add(report2.prediction_sig['xgboost2'], "report2.prediction_sig['xgboost2']")
-
-session.add(report.prediction_bck['xgboost'], "report.prediction_bck['xgboost2']")
-session.add(report2.prediction_bck['xgboost2'], "report2.prediction_bck['xgboost2']")
-
-session.add(report.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "report.prediction_pdf()")
-session.add(report2.prediction_pdf(bins = 20, normed = True, plot_type='bar'), "report2.prediction_pdf()")
-
-a=1
-session.add(a, "test")
+session.commit("ANN of Neurolab. Trained, predicted. Some results are shown.")
 
 # <codecell>
 
-#session.commit("Upload by ipykee. Time series for several popularity intervals added. Nb of usages = !from 0. !to 1.")
+#get variables
+import ipykee
+keeper = ipykee.Keeper("C._NewFeatures")
+session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
+vars_c21 = session.get_variables("master")
+#variables.keys()
+
+# <codecell>
+
+#get variables
+# import ipykee
+# keeper = ipykee.Keeper("C._NewFeatures")
+# session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
+# vars_c21 = session.get_variables("master")
+#variables.keys()
+
+# <codecell>
+
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_train']<0.1)]
+
+# <codecell>
+
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0) and (results['Error_train']<0.1)]
+
+# <codecell>
+
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_train']<0.1)]
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=50, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[-1]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0')
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<0.1)]
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=50, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[-1]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_test']<0.1)]
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=50, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[-1]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<0.1)*(results['Error_train']<0.1)]
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=50, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[-1]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<0.3)*(results['Error_train']<0.3)]
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=50, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[-1]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+y_score = (1.0 + non_nan_res['66'].values)/2.0
+#y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<0.2)*(results['Error_train']<0.2)]
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=50, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[-1]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<0.02)*(results['Error_train']<0.02)]
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=50, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[-1]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)]
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=50, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[-1]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[104]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+
+# <codecell>
+
+y_last=[]
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Relative test error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last==0], bins=50, label='y_last=0', alpha=1)
+plt.hist(values[y_last!=0], bins=50, label='y_last!=0', alpha=1)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0)*1
+#y_score = (1.0 + non_nan_res['66'].values)/2.0
+y_score = values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+all_cols = [str(i) for i in range(0,67)]
+for row in range(0,30):
+    subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]))
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum.xs(index))
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+all_cols = [str(i) for i in range(0,67)]
+for row in range(0,30):
+    subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]), color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum.xs(index))
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+all_cols = [str(i) for i in range(0,67)]
+for row in range(0,30):
+    subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]), color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum.xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+all_cols = [str(i) for i in range(0,67)]
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]), color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum.xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+all_cols = [str(i) for i in range(0,67)]
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]), color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    #plt.plot(df_ts_rolling_sum.xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+non_nan_res
+
+# <codecell>
+
+non_nan_res.irow([1])
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+all_cols = [str(i) for i in range(0,67)]
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row].values), color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    #plt.plot(df_ts_rolling_sum.xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+all_cols = [str(i) for i in range(0,67)]
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]).values, color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    #plt.plot(df_ts_rolling_sum.xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+non_nan_res.irow([1]).values
+
+# <codecell>
+
+non_nan_res.irow([1]).values[0]
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+all_cols = [str(i) for i in range(0,67)]
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]).values[0], color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    #plt.plot(df_ts_rolling_sum.xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+all_cols = [str(i) for i in range(0,67)]
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]).values[0], color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum.xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+df_ts_rolling_sum
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = [str(i) for i in range(39,105)]
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]).values[0], color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum.xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = [str(i) for i in range(39,105)]
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]).values[0], color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum[cols].xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = range(39,105)
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]).values[0], color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum[cols].xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+df_ts_rolling_sum.max()
+
+# <codecell>
+
+df_ts_rolling_sum.max(axis=1)
+
+# <codecell>
+
+df_ts_rolling_sum/df_ts_rolling_sum.max(axis=1)
+
+# <codecell>
+
+df_ts_rolling_sum/df_ts_rolling_sum.max(axis=1).values
+
+# <codecell>
+
+df_ts_rolling_sum.values/df_ts_rolling_sum.max(axis=1).values
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+max_values
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+column = df_ts_rolling_sum[1]
+
+# <codecell>
+
+df_ts_rolling_sum
+
+# <codecell>
+
+df_ts_rolling_sum.columns
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+column = df_ts_rolling_sum[13]
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+column = df_ts_rolling_sum[13]
+column
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+column = df_ts_rolling_sum[13]
+a = column/max_values
+a
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
+for col in df_ts_rolling_sum.columns:
+    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+    
+df_ts_rolling_sum_std
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
+for col in df_ts_rolling_sum.columns:
+    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = range(39,105)
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]).values[0], color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = range(104-66,105)
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]).values[0], color='b')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='r')
+    plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = range(104-66,105)
+for row in range(0,30):
+    plt.subplot(1,1,1)
+    plt.plot(non_nan_res.irow([row]).values[0], color='b', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='r', label='real')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    plt.show()
+
+# <codecell>
+
+print 5/2
+
+# <codecell>
+
+print 5//2
+
+# <codecell>
+
+print 5%2
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = range(104-66,105)
+a=0
+b=30
+N=b-a
+for row in range(a,b):
+    plt.subplot(N%3+1,3,row)
+    plt.plot(non_nan_res.irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = range(104-66,105)
+a=0
+b=30
+N=b-a
+for row in range(a,b):
+    subplot(N%3+1,3,row)
+    plt.plot(non_nan_res.irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = range(104-66,105)
+a=0
+b=30
+N=b-a
+figure(figsize=(15, 50))
+for row in range(a,b):
+    subplot(N%3+1,3,row)
+    plt.plot(non_nan_res.irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+print N
+
+# <codecell>
+
+print N%3
+
+# <codecell>
+
+print N%3.
+
+# <codecell>
+
+print N//3
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = range(104-66,105)
+a=0
+b=30
+N=b-a
+figure(figsize=(15, 50))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res.irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = range(104-66,105)
+a=0
+b=30
+N=b-a
+figure(figsize=(15, 58(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res.irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+test_cols = [str(i) for i in range(54,67)]
+cols = range(104-66,105)
+a=0
+b=30
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res.irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(104-66,105)
+a=0
+b=30
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=30
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=30
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3-fh,param3-fh], [0,1], color='d')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=3
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3-fh,param3-fh], [0,1], color='b')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=3
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3-fh,param3-fh], [-1,1], color='b')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=3
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3-fh,param3-fh], [-1,1], color='bl')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=3
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3-fh,param3-fh], [-1,1], color='black')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=100
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3-fh,param3-fh], [-1,1], color='black')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=30
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3-fh,param3-fh], [-1,1], color='black')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=60
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3-fh,param3-fh], [-1,1], color='black')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+cols = range(105-66,105)
+a=0
+b=60
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3-fh,param3-fh], [-1,1], color='black')
+    plt.plot([param3-fh-10,param3-fh-10], [-1,1], color='black')
+    plt.title('Index is '+str(index))
+    plt.legend(loc='best')
+    #plt.show()
 
