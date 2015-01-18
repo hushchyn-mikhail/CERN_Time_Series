@@ -1525,3 +1525,44 @@ session = ipykee.Session(project_name="D._UsageForecast")
 # <codecell>
 
 session.commit("ANN of Neurolab. Predict boolean values. Preview.")
+
+# <codecell>
+
+#%%px
+ws = 13#window_size
+fh = 13#forecast horizont
+param2 = 105-param1
+
+def N_M_Transformation(time_serie, ws, fh):
+    x_cols = ['x'+str(i) for i in range(1,ws+1)]#columns names
+    time_serie_table = pd.DataFrame(columns=x_cols+['y'])
+    time_serie_4predict = pd.DataFrame(columns=x_cols)
+    #Data for train and test
+    for row_num in range(0, param2-fh-ws):
+        time_serie_table.loc[row_num] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0])\
+        +list(time_serie.icol([row_num+ws+fh]).values[0])#y variable 
+    #Data for prediction
+    for row_num in range(param2-fh-ws,param2-ws):
+        time_serie_4predict.loc[row_num-(param2-fh-ws)] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0]) 
+        #print row_num
+
+    return time_serie_table, time_serie_4predict
+
+def N_M_Transformation_Bolean(time_serie, ws, fh):
+    x_cols = ['x'+str(i) for i in range(1,ws+1)]#columns names
+    time_serie_table = pd.DataFrame(columns=x_cols+['y'])
+    time_serie_4predict = pd.DataFrame(columns=x_cols)
+    #Data for train and test
+    for row_num in range(0, param2-fh-ws):
+        time_serie_table.loc[row_num] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0])\
+        +list((time_serie.icol([row_num+ws+fh]).values[0]>0)*1)#y variable 
+    #Data for prediction
+    for row_num in range(param2-fh-ws,param2-ws):
+        time_serie_4predict.loc[row_num-(param2-fh-ws)] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0]) 
+        #print row_num
+
+    return time_serie_table, time_serie_4predict
+
+# <codecell>
+
+session.commit("ANN of Neurolab. Predict boolean values. Preview. Commit 2.")
