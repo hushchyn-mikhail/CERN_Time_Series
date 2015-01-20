@@ -117,3766 +117,2436 @@ for i in range(1,105):
 
 # <codecell>
 
-#%%px
-param1 = 13
-df_ts_rolling_sum = pd.rolling_sum(df_time_series, window=param1,axis=1)[range(param1,105)]
+max_accesses = df_time_series.max(axis=1)
+df_ts_states = df_time_series.copy()
+for col in df_ts_states.columns:
+    df_ts_states[col] = 0 + (df_time_series[col]>0)*(df_time_series[col]<=0.5*max_accesses)*1 + \
+    (df_time_series[col]>0.5*max_accesses)*(df_time_series[col]<=max_accesses)*2
 
 # <codecell>
 
-#%%px
-ws = 13#window_size
-fh = 13#forecast horizont
-param2 = 105-param1
-
-def N_M_Transformation(time_serie, ws, fh):
-    x_cols = ['x'+str(i) for i in range(1,ws+1)]#columns names
-    time_serie_table = pd.DataFrame(columns=x_cols+['y'])
-    time_serie_4predict = pd.DataFrame(columns=x_cols)
-    #Data for train and test
-    for row_num in range(0, param2-fh-ws):
-        time_serie_table.loc[row_num] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0])\
-        +list(time_serie.icol([row_num+ws+fh]).values[0])#y variable 
-    #Data for prediction
-    for row_num in range(param2-fh-ws,param2-ws):
-        time_serie_4predict.loc[row_num-(param2-fh-ws)] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0]) 
-        #print row_num
-
-    return time_serie_table, time_serie_4predict
-
-def N_M_Transformation_Bolean(time_serie, ws, fh):
-    x_cols = ['x'+str(i) for i in range(1,ws+1)]#columns names
-    time_serie_table = pd.DataFrame(columns=x_cols+['y'])
-    time_serie_4predict = pd.DataFrame(columns=x_cols)
-    #Data for train and test
-    for row_num in range(0, param2-fh-ws):
-        time_serie_table.loc[row_num] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0])\
-        +list((time_serie.icol([row_num+ws+fh]).values[0]>0)*1)#y variable 
-    #Data for prediction
-    for row_num in range(param2-fh-ws,param2-ws):
-        time_serie_4predict.loc[row_num-(param2-fh-ws)] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0]) 
-        #print row_num
-
-    return time_serie_table, time_serie_4predict
+#Example
+row = 48
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
 
 # <codecell>
 
-#%%px
-param3 = param2-fh-ws
-print param3
+def TransitionMatrix(train):
+    data = ts_train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-# %%px
-# results = pd.DataFrame(columns=["Index","Error_train","Error_valid", "Error_test"]+range(0,param3))
-# results.to_csv('/mnt/w76/notebook/datasets/mikhail/ann_res.csv')
+#Example
+row = 49
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
 
 # <codecell>
 
-def ANN(rows_range):
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 41
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 42
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 33
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 10
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+#Example
+row = 11
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+#Example
+row = 12
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+#Example
+row = 13
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+#Example
+row = 14
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+#Example
+row = 15
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+for i in range(0,60):
+    figure(figsize=(15, 5))
+    subplot(121)
+    plt.plot(df_time_series.irow([row]).values[0])
+    plt.title(str(i))
+    subplot(122)
+    plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+for i in range(0,60):
+    figure(figsize=(15, 5))
+    subplot(121)
+    plt.plot(df_time_series.irow([i]).values[0])
+    plt.title(str(i))
+    subplot(122)
+    plt.plot(df_ts_states.irow([i]).values[0])
+
+# <codecell>
+
+#Example
+row = 32
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 40
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 44
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 53
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 54
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 56
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 59
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 58
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+#Example
+row = 32
+figure(figsize=(15, 5))
+subplot(121)
+plt.plot(df_time_series.irow([row]).values[0])
+subplot(122)
+plt.plot(df_ts_states.irow([row]).values[0])
+
+# <codecell>
+
+train1 = df_ts_states.irow([row]).values[0][:70]
+test1 = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix1 = TransitionMatrix(train1)
+stationary_dist1 = StatDist(transition_matrix1)
+
+print 'Transition matrix:\n', transition_matrix1
+print 'Stationary distribution:\n', stationary_dist1
+
+# <codecell>
+
+train = df_ts_states.irow([row]).values[0][:70]
+test = df_ts_states.irow([row]).values[0][70:]
+
+transition_matrix = TransitionMatrix(train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+c = np.array(transition_matrix)
+c
+
+# <codecell>
+
+c = np.array(transition_matrix).reshape(transition_matrix.shape[0]*transition_matrix.shape[1],)
+c
+
+# <codecell>
+
+d = {1:2, 2:3}
+d
+
+# <codecell>
+
+d[1]
+
+# <codecell>
+
+print 3**100
+
+# <codecell>
+
+%time print 3**100
+
+# <codecell>
+
+%%time 
+print 3**100
+
+# <codecell>
+
+%time 
+print 3**100
+
+# <codecell>
+
+print 60//10
+
+# <codecell>
+
+print 61//10
+
+# <codecell>
+
+print 61%10
+
+# <codecell>
+
+print 60%10
+
+# <codecell>
+
+%%time
+dict_matrixes = {}
+dict_dists = {}
+
+for row in range(0, df_ts_states):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
+
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
     
-    import neurolab as nl
-    keys = [str(i) for i in range(1,param3+1)]
-    results = pd.DataFrame(columns=["Index","Error_train","Error_valid", "Error_test"]+keys)
-
-    param4 = fh+10
-    f = nl.trans.TanSig()
-
-    for row in rows_range:
+    dict_matrixes[row] = transition_matrix
+    dict_dists[row] = stationary_dist
+    
+    if row%100==0:
         print row
-        #Take a row and transfrom it
-        ts_train = df_ts_rolling_sum.irow([row])
-        time_serie_table, time_serie_4predict = N_M_Transformation_Bolean(ts_train, ws, fh)
-        max_value = ts_train.max(axis=1).values[0]
-        #Transform the row's values to the [0,1] values
-        time_serie_table['y'] = max_value*time_serie_table['y'].values
-        time_serie_table = time_serie_table/(1.0*max_value)
-        time_serie_4predict = time_serie_4predict/(1.0*max_value)
-        x_cols = ['x'+str(i) for i in range(1,ws+1)]
-        #Get train data
-        x_train = time_serie_table[x_cols].irow(range(0,param3-param4)).values
-        y_train = time_serie_table['y'].irow(range(0,param3-param4)).values
-        size = len(y_train)
-        y_train = y_train.reshape(len(y_train),1)
-        #Get validation data
-        x_valid = time_serie_table[x_cols].irow(range(param3-param4,param3-fh)).values
-        y_valid = time_serie_table['y'].irow(range(param3-param4,param3-fh)).values
-        y_valid = y_valid.reshape(len(y_valid),1)
-        #Get test data
-        x_test = time_serie_table[x_cols].irow(range(param3-fh,param3)).values
-        y_test = time_serie_table['y'].irow(range(param3-fh,param3)).values
-        y_test = y_test.reshape(len(y_test),1)
-        # Create network with 2 layers and random initialized
-        init = []
-        for i in range(0, x_train.shape[1]):
-            init.append([0,1])
-        min_error = 10
-        for k in range(0,20):
-            cur_net = nl.net.newff(init,[5,1],transf=[f, f])
-            for l in cur_net.layers:
-                l.initf = nl.init.init_rand(l, min=-0.5, max=0.5, init_prop='w')
-            # new initialization
-            cur_net.init()
-            if k==0:
-                net=cur_net
-                error = 10
-
-            # Train network
-            cur_net.trainf = nl.train.train_bfgs
-            cur_error = cur_net.train(x_train, y_train, epochs=50, show=0, goal=0.0001)
-
-            out_train = cur_net.sim(x_train)
-            out_valid = cur_net.sim(x_valid)
-
-            tar_out_valid = np.concatenate((y_valid, out_valid), axis=1)
-            tar_out_train = np.concatenate((y_train, out_train), axis=1)
-            tar_out = np.concatenate((tar_out_train, tar_out_valid), axis=0)
-            max_abs = np.abs(tar_out[:,0]-tar_out[:,1])
-            maef = nl.error.MAE()
-            saef = nl.error.SAE()
-            msef = nl.error.MSE()
-            #check_error = maef(tar_out_valid)
-            #check_error = msef(tar_out)
-            #check_error = saef(tar_out)
-            #check_error = cur_error[-1]
-            check_error = max_abs.max()
-
-            print check_error
-            if check_error<min_error:
-                min_error = check_error
-                net = cur_net
-                error = cur_error
-
-
-        # Simulate network
-        print 'min_error', min_error
-        out_train = net.sim(x_train)
-
-        # Plot result
-#         plt.subplot(1,1,1)
-#         plt.plot(error)
-#         plt.xlabel('Epoch number')
-#         plt.ylabel('error (default SSE)')
-#         plt.show()
-
-        out_valid = net.sim(x_valid)
-        out_test = net.sim(x_test)
-#         plt.subplot(1,1,1)
-#         plt.plot(np.concatenate((y_train,y_valid, y_test),axis=0))
-#         plt.plot(np.concatenate((out_train,out_valid,out_test),axis=0))
-#         plt.show()
-
-
-        #Get results
-        index = ts_train.index[0]
-        error_train = maef(tar_out_train)
-        error_valid = maef(tar_out_valid)
-        tar_out_test = np.concatenate((y_test, out_test), axis=1)
-        error_test = maef(tar_out_test)
-        values = list(np.concatenate((out_train,out_valid,out_test)))
-        values = np.reshape(values,(len(values),))
-        data_dict = {"Index":[index],"Error_train":[error_train],"Error_valid":[error_valid], "Error_test":[error_test]}
-        for i in range(1,param3+1):
-            data_dict[str(i)] = [values[i-1]]
-        new_row = pd.DataFrame(data=data_dict)
-        results = results.append(new_row)
-        
-    #results.to_csv('/mnt/w76/notebook/datasets/mikhail/ann_res.csv',mode='a',header=False)
-    return results
 
 # <codecell>
 
-%matplotlib inline
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+%%time
+dict_matrixes = {}
+dict_dists = {}
 
-results = pd.read_csv('ann_res_50.csv')
-results.columns
+for row in range(0, df_ts_states.shape[0]):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
 
-# <codecell>
-
-df_ts_rolling_sum.columns
-df_ts_rolling_sum = (df_ts_rolling_sum>0)*1
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-
-# <codecell>
-
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
-
-# <codecell>
-
-#print error hists
-figure(figsize=(15, 5))
-subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
-subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
-
-# <codecell>
-
-non_nan_res[y_last==0].shape
-
-# <codecell>
-
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
-
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
     
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
+    dict_matrixes[row] = transition_matrix
+    dict_dists[row] = stationary_dist
     
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
-
-# <codecell>
-
-figure(figsize=(15, 10))
-
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-y_score_avg = 0.5*(avg_value_predict_test+2.0)
-#y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-#%%px
-%matplotlib inline
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-#Load original data
-data = pd.read_csv('popularity-728days_my.csv')
-
-head = list(data.columns[:21]) + range(1,105)
-data = pd.DataFrame(columns=head, data=data.values)
-
-# <codecell>
-
-#%%px
-#Select data
-selection = ((data['Now'] - data['Creation-week']) > 26)&((data['Now'] - data['FirstUsage']) > 26)&((data[78] - data[1]) != 0)
-data_sel = data[selection].copy()
-#data_sel = data.copy()
-print data_sel.shape
-
-# <codecell>
-
-#%%px
-periods = range(1,105)
-
-#------------------------------------------------------
-#Get maximum intervals and last weeks with zeros usages
-def InterMax(data_sel, periods):
-    #Get binary vector representation of the selected data
-    data_bv = data_sel.copy()
-    #Get week's usages
-    for i in periods:
-        if i!=1:
-            data_bv[i] = data_sel[i] - data_sel[i-1]
-            
-    #Get binary representation
-    data_bv[periods] = (data_bv[periods] != 0)*1
-    
-    inter_max = []
-    last_zeros = []
-    nb_peaks = []
-    inter_mean = []
-    inter_std = []
-    inter_rel = []
-    
-    for i in range(0,data_bv.shape[0]):
-        ds = data_bv[periods].irow(i)
-        nz = ds.nonzero()[0]
-        inter = []
-        
-        nb_peaks.append(len(nz))
-        if len(nz)==0:
-            nz = [0]
-        if len(nz)<2:
-            inter = [0]
-            #nz = [0]
-        else:
-            for k in range(0, len(nz)-1):
-                val = nz[k+1]-nz[k]
-                inter.append(val)
-        
-        inter = np.array(inter)
-        inter_mean.append(inter.mean())
-        inter_std.append(inter.std())
-        if inter.mean()!=0:
-            inter_rel.append(inter.std()/inter.mean())
-        else:
-            inter_rel.append(0)
-                
-        last_zeros.append(periods[-1] - nz[-1] + 1)
-        inter_max.append(max(inter))
-    
-    return np.array(inter_max), np.array(last_zeros), np.array(nb_peaks), np.array(inter_mean), np.array(inter_std), np.array(inter_rel)
-
-# <codecell>
-
-#%%px
-#Add features
-inter_max, last_zeros, nb_peaks, inter_mean, inter_std, inter_rel = InterMax(data_sel, periods)
-data_sel['last-zeros'] = last_zeros
-data_sel['inter_max'] = inter_max
-data_sel['nb_peaks'] = nb_peaks
-data_sel['inter_mean'] = inter_mean
-data_sel['inter_std'] = inter_std
-data_sel['inter_rel'] = inter_rel
-
-# <codecell>
-
-#%%px
-data = data_sel[data_sel['nb_peaks']>=0]
-
-# <codecell>
-
-#%%px
-data_weeks = data[range(1,105)]
-
-# <codecell>
-
-#%%px
-df_time_series = data_weeks.copy()
-for i in range(1,105):
-    if i!=1:
-        df_time_series[i] = data_weeks[i]-data_weeks[i-1]
-
-# <codecell>
-
-#%%px
-param1 = 13
-df_ts_rolling_sum = pd.rolling_sum(df_time_series, window=param1,axis=1)[range(param1,105)]
-
-# <codecell>
-
-#%%px
-ws = 13#window_size
-fh = 13#forecast horizont
-param2 = 105-param1
-
-def N_M_Transformation(time_serie, ws, fh):
-    x_cols = ['x'+str(i) for i in range(1,ws+1)]#columns names
-    time_serie_table = pd.DataFrame(columns=x_cols+['y'])
-    time_serie_4predict = pd.DataFrame(columns=x_cols)
-    #Data for train and test
-    for row_num in range(0, param2-fh-ws):
-        time_serie_table.loc[row_num] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0])\
-        +list(time_serie.icol([row_num+ws+fh]).values[0])#y variable 
-    #Data for prediction
-    for row_num in range(param2-fh-ws,param2-ws):
-        time_serie_4predict.loc[row_num-(param2-fh-ws)] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0]) 
-        #print row_num
-
-    return time_serie_table, time_serie_4predict
-
-def N_M_Transformation_Bolean(time_serie, ws, fh):
-    x_cols = ['x'+str(i) for i in range(1,ws+1)]#columns names
-    time_serie_table = pd.DataFrame(columns=x_cols+['y'])
-    time_serie_4predict = pd.DataFrame(columns=x_cols)
-    #Data for train and test
-    for row_num in range(0, param2-fh-ws):
-        time_serie_table.loc[row_num] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0])\
-        +list((time_serie.icol([row_num+ws+fh]).values[0]>0)*1)#y variable 
-    #Data for prediction
-    for row_num in range(param2-fh-ws,param2-ws):
-        time_serie_4predict.loc[row_num-(param2-fh-ws)] = list(time_serie.icol(range(row_num+1, row_num+ws+1)).values[0]) 
-        #print row_num
-
-    return time_serie_table, time_serie_4predict
-
-# <codecell>
-
-#%%px
-param3 = param2-fh-ws
-print param3
-
-# <codecell>
-
-# %%px
-# results = pd.DataFrame(columns=["Index","Error_train","Error_valid", "Error_test"]+range(0,param3))
-# results.to_csv('/mnt/w76/notebook/datasets/mikhail/ann_res.csv')
-
-# <codecell>
-
-def ANN(rows_range):
-    
-    import neurolab as nl
-    keys = [str(i) for i in range(1,param3+1)]
-    results = pd.DataFrame(columns=["Index","Error_train","Error_valid", "Error_test"]+keys)
-
-    param4 = fh+10
-    f = nl.trans.TanSig()
-
-    for row in rows_range:
+    if row%100==0:
         print row
-        #Take a row and transfrom it
-        ts_train = df_ts_rolling_sum.irow([row])
-        time_serie_table, time_serie_4predict = N_M_Transformation_Bolean(ts_train, ws, fh)
-        max_value = ts_train.max(axis=1).values[0]
-        #Transform the row's values to the [0,1] values
-        time_serie_table['y'] = max_value*time_serie_table['y'].values
-        time_serie_table = time_serie_table/(1.0*max_value)
-        time_serie_4predict = time_serie_4predict/(1.0*max_value)
-        x_cols = ['x'+str(i) for i in range(1,ws+1)]
-        #Get train data
-        x_train = time_serie_table[x_cols].irow(range(0,param3-param4)).values
-        y_train = time_serie_table['y'].irow(range(0,param3-param4)).values
-        size = len(y_train)
-        y_train = y_train.reshape(len(y_train),1)
-        #Get validation data
-        x_valid = time_serie_table[x_cols].irow(range(param3-param4,param3-fh)).values
-        y_valid = time_serie_table['y'].irow(range(param3-param4,param3-fh)).values
-        y_valid = y_valid.reshape(len(y_valid),1)
-        #Get test data
-        x_test = time_serie_table[x_cols].irow(range(param3-fh,param3)).values
-        y_test = time_serie_table['y'].irow(range(param3-fh,param3)).values
-        y_test = y_test.reshape(len(y_test),1)
-        # Create network with 2 layers and random initialized
-        init = []
-        for i in range(0, x_train.shape[1]):
-            init.append([0,1])
-        min_error = 10
-        for k in range(0,20):
-            cur_net = nl.net.newff(init,[5,1],transf=[f, f])
-            for l in cur_net.layers:
-                l.initf = nl.init.init_rand(l, min=-0.5, max=0.5, init_prop='w')
-            # new initialization
-            cur_net.init()
-            if k==0:
-                net=cur_net
-                error = 10
-
-            # Train network
-            cur_net.trainf = nl.train.train_bfgs
-            cur_error = cur_net.train(x_train, y_train, epochs=50, show=0, goal=0.0001)
-
-            out_train = cur_net.sim(x_train)
-            out_valid = cur_net.sim(x_valid)
-
-            tar_out_valid = np.concatenate((y_valid, out_valid), axis=1)
-            tar_out_train = np.concatenate((y_train, out_train), axis=1)
-            tar_out = np.concatenate((tar_out_train, tar_out_valid), axis=0)
-            max_abs = np.abs(tar_out[:,0]-tar_out[:,1])
-            maef = nl.error.MAE()
-            saef = nl.error.SAE()
-            msef = nl.error.MSE()
-            #check_error = maef(tar_out_valid)
-            #check_error = msef(tar_out)
-            #check_error = saef(tar_out)
-            #check_error = cur_error[-1]
-            check_error = max_abs.max()
-
-            print check_error
-            if check_error<min_error:
-                min_error = check_error
-                net = cur_net
-                error = cur_error
-
-
-        # Simulate network
-        print 'min_error', min_error
-        out_train = net.sim(x_train)
-
-        # Plot result
-#         plt.subplot(1,1,1)
-#         plt.plot(error)
-#         plt.xlabel('Epoch number')
-#         plt.ylabel('error (default SSE)')
-#         plt.show()
-
-        out_valid = net.sim(x_valid)
-        out_test = net.sim(x_test)
-#         plt.subplot(1,1,1)
-#         plt.plot(np.concatenate((y_train,y_valid, y_test),axis=0))
-#         plt.plot(np.concatenate((out_train,out_valid,out_test),axis=0))
-#         plt.show()
-
-
-        #Get results
-        index = ts_train.index[0]
-        error_train = maef(tar_out_train)
-        error_valid = maef(tar_out_valid)
-        tar_out_test = np.concatenate((y_test, out_test), axis=1)
-        error_test = maef(tar_out_test)
-        values = list(np.concatenate((out_train,out_valid,out_test)))
-        values = np.reshape(values,(len(values),))
-        data_dict = {"Index":[index],"Error_train":[error_train],"Error_valid":[error_valid], "Error_test":[error_test]}
-        for i in range(1,param3+1):
-            data_dict[str(i)] = [values[i-1]]
-        new_row = pd.DataFrame(data=data_dict)
-        results = results.append(new_row)
-        
-    #results.to_csv('/mnt/w76/notebook/datasets/mikhail/ann_res.csv',mode='a',header=False)
-    return results
 
 # <codecell>
 
-%matplotlib inline
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+%%time
+dict_matrixes = {}
+dict_dists = {}
 
-results = pd.read_csv('ann_res_50.csv')
-results.columns
+for row in range(0, df_ts_states.shape[0]):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
 
-# <codecell>
-
-df_ts_rolling_sum.columns
-#df_ts_rolling_sum = (df_ts_rolling_sum>0)*1
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
+    
+    dict_matrixes[row] = transition_matrix
+    dict_dists[row] = stationary_dist
 
 # <codecell>
 
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+dict_dists
 
 # <codecell>
 
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
+dict_matrixes
 
 # <codecell>
 
-#print error hists
+#Example
+row = 2
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
+plt.plot(df_time_series.irow([row]).values[0])
 subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.plot(df_ts_states.irow([row]).values[0])
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-non_nan_res[y_last==0].shape
-
-# <codecell>
-
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
-
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
-    
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
-    
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
-
-# <codecell>
-
-figure(figsize=(15, 10))
-
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-y_score_avg = 0.5*(avg_value_predict_test+2.0)
-#y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=0.1)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-
-# <codecell>
-
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
-
-# <codecell>
-
-#print error hists
+#Example
+row = 2
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
+plt.plot(df_time_series.irow([row]).values[0])
 subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.plot(df_ts_states.irow([row]).values[0])
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-non_nan_res[y_last==0].shape
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
 
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-from sklearn.metrics import roc_curve, auc
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
 
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
 
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
-    
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
-    
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-figure(figsize=(15, 10))
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
 
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-y_score_avg = 0.5*(avg_value_predict_test+2.0)
-#y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=0.2)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-
-# <codecell>
-
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
-
-# <codecell>
-
-#print error hists
+#Example
+row = 3
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
+plt.plot(df_time_series.irow([row]).values[0])
 subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.plot(df_ts_states.irow([row]).values[0])
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-non_nan_res[y_last==0].shape
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
 
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-from sklearn.metrics import roc_curve, auc
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
 
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
 
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
-    
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
-    
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-figure(figsize=(15, 10))
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
 
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-from sklearn.metrics import roc_curve, auc
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    pairs = np.concatenate((pairs, mask_data))
+    print pairs
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
 
-y_true_avg = (avg_value_true_test>0)*1
-y_score_avg = 0.5*(avg_value_predict_test+2.0)
-#y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.2)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    #pairs = np.concatenate((pairs, mask_data))
+    print pairs
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-#print error hists
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    #pairs = np.concatenate((pairs, mask_data))
+    print n
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    #pairs = np.concatenate((pairs, mask_data))
+    print distinct
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+ts_train
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    pairs = np.concatenate((pairs, mask_data))
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    pairs = np.concatenate((pairs, mask_data))
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n) - np.ones((n,n))
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    pairs = np.concatenate((pairs, mask_data))
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n) - np.ones((n,n))
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    pairs = np.concatenate((pairs, mask_data))
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n) - 1
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    pairs = np.concatenate((pairs, mask_data))
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    #pairs = np.concatenate((pairs, mask_data))
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    #pairs = np.concatenate((pairs, mask_data))
+    print pairs
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    pairs = np.concatenate((pairs, mask_data))
+    print pairs
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    #pairs = np.concatenate((pairs, mask_data))
+    print pairs
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = 1 * coded_data[:-1] + n * coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    #pairs = np.concatenate((pairs, mask_data))
+    print pairs
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train, n_states=3):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = n_states
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    mask_data = np.array(range(0,n*n))
+    #pairs = np.concatenate((pairs, mask_data))
+    print pairs
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+ts_train
+
+# <codecell>
+
+#Example
+row = 48
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
+plt.plot(df_time_series.irow([row]).values[0])
 subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.plot(df_ts_states.irow([row]).values[0])
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-non_nan_res[y_last==0].shape
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.1)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-
-# <codecell>
-
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
-
-# <codecell>
-
-#print error hists
+#Example
+row = 4
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
+plt.plot(df_time_series.irow([row]).values[0])
 subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.plot(df_ts_states.irow([row]).values[0])
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-non_nan_res[y_last==0].shape
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    print distinct
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
 
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-from sklearn.metrics import roc_curve, auc
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
 
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
 
 # <codecell>
 
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-#print error hists
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    #distinct = []
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    #distinct = []
+    print distinct
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    #distinct = []
+    print type(distinct)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    distinct = set([0,1,2])
+    print type(distinct)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    distinct = set(data)
+    distinct = set([0,1,2])
+    print type(distinct)
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    #distinct = set(data)
+    distinct = set([0,1,2])
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    print counts.sum(axis=1, dtype=float).reshape(n,1)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    #distinct = set(data)
+    distinct = set([0,1,2])
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    print counts.sum(axis=1, dtype=float).reshape(n,1) + counts.sum(axis=1, dtype=float).reshape(n,1)
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    #distinct = set(data)
+    distinct = set([0,1,2])
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    print counts.sum(axis=1, dtype=float).reshape(n,1) + (counts.sum(axis=1, dtype=float).reshape(n,1)==0)*1
+    #counts = counts/counts.sum(axis=1, dtype=float).reshape(n,1)
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+def TransitionMatrix(train):
+    data = train
+    #distinct = set(data)
+    distinct = set([0,1,2])
+    coding = {j:i for i, j in enumerate(distinct)}
+    coded_data = np.fromiter((coding[i] for i in data), dtype=np.uint8)
+    n = len(distinct)
+    pairs = n * coded_data[:-1] + coded_data[1:]
+    counts = np.bincount(pairs, minlength=n*n).reshape(n, n)
+    row_sums = counts.sum(axis=1, dtype=float).reshape(n,1) + (counts.sum(axis=1, dtype=float).reshape(n,1)==0)*1
+    counts = counts/row_sums
+    return np.mat(counts)
+
+def StatDist(matrix):
+    return np.array((matrix**100)[0,:])[0]
+
+# <codecell>
+
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
+
+# <codecell>
+
+%%time
+dict_matrixes = {}
+dict_dists = {}
+
+for row in range(0, df_ts_states.shape[0]):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
+
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
+    
+    dict_matrixes[row] = transition_matrix
+    dict_dists[row] = stationary_dist
+
+# <codecell>
+
+#Example
+row = 1
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
+plt.plot(df_time_series.irow([row]).values[0])
 subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.plot(df_ts_states.irow([row]).values[0])
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
+#Example
+ts_train = df_ts_states.irow([row]).values[0]
+transition_matrix = TransitionMatrix(ts_train)
+stationary_dist = StatDist(transition_matrix)
+
+print 'Transition matrix:\n', transition_matrix
+print 'Stationary distribution:\n', stationary_dist
 
 # <codecell>
 
-non_nan_res[y_last==0].shape
+test.sum(axis=0)
 
 # <codecell>
 
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
+test.sum(axis=1)
 
 # <codecell>
 
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
+test.sum()
 
 # <codecell>
 
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.05)*(results['Error_train']<=0.05)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
+%%time
+dict_matrixes = {}
+dict_dists = {}
+
+for row in range(0, df_ts_states.shape[0]):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
+
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
+    
+    dict_matrixes[row] = transition_matrix
+    dict_dists[row] = stationary_dist
+    
+    dict_test_sum = test.sum(axis=0)
 
 # <codecell>
 
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
-
-# <codecell>
-
-#print error hists
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
-subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.hist(dict_test_sum.itemes())
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
-
-# <codecell>
-
-non_nan_res[y_last==0].shape
-
-# <codecell>
-
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.05)*(results['Error_train']<=0.5)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-
-# <codecell>
-
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
-
-# <codecell>
-
-#print error hists
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
-subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.hist(dict_test_sum.items())
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
+%%time
+dict_matrixes = {}
+dict_dists = {}
+
+for row in range(0, df_ts_states.shape[0]):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
+
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
+    
+    dict_matrixes[row] = transition_matrix
+    dict_dists[row] = stationary_dist
+    
+    dict_test_sum[row] = test.sum(axis=0)
 
 # <codecell>
 
-non_nan_res[y_last==0].shape
+test
 
 # <codecell>
 
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
+test.sum()
 
 # <codecell>
 
-from sklearn.metrics import roc_curve, auc
+%%time
+dict_matrixes = {}
+dict_dists = {}
 
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
+for row in range(0, df_ts_states.shape[0]):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
 
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
+    
+    dict_matrixes[row] = transition_matrix
+    dict_dists[row] = stationary_dist
+    
+    dict_test_sum[row] = test.sum()
 
 # <codecell>
 
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+%%time
+dict_matrixes = {}
+dict_dists = {}
+dict_test_sum = {}
+
+for row in range(0, df_ts_states.shape[0]):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
+
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
+    
+    dict_matrixes[row] = transition_matrix
+    dict_dists[row] = stationary_dist
+    
+    dict_test_sum[row] = test.sum()
 
 # <codecell>
 
-#print error hists
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
+plt.hist(dict_test_sum.items())
 
-#print predict value for the last point
-subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
-
-# <codecell>
-
-non_nan_res[y_last==0].shape
-
-# <codecell>
-
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
-
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
-    
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
-    
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
-
-# <codecell>
-
-figure(figsize=(15, 10))
-
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-y_score_avg = 0.5*(avg_value_predict_test+2.0)
-#y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
-
-# <codecell>
-
-import ipykee
-#ipykee.create_project(project_name="D._UsageForecast", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
-session = ipykee.Session(project_name="D._UsageForecast")
-
-# <codecell>
-
-session.commit("ANN of Neurolab. ROC AUC = 0.92.")
-
-# <codecell>
-
-df_ts_rolling_sum
-
-# <codecell>
-
-df_time_series
-
-# <codecell>
-
-data
-
-# <codecell>
-
-#Selection
-non_nan_res["Index"]
-
-# <codecell>
-
-#Selection
-non_nan_res.loc([3])
-
-# <codecell>
-
-#Selection
-non_nan_res.loc(3)
-
-# <codecell>
-
-#Selection
-non_nan_res.index[1]
-
-# <codecell>
-
-#Selection
-non_nan_res.index[2]
-
-# <codecell>
-
-#Selection
-non_nan_res.index[3]
-
-# <codecell>
-
-#Selection
-non_nan_res.index[4]
-
-# <codecell>
-
-#Selection
-non_nan_res.ix[4]
-
-# <codecell>
-
-#Selection
-non_nan_res.ix[3]
-
-# <codecell>
-
-#Selection
-non_nan_res.ix[1]
-
-# <codecell>
-
-#Selection
-non_nan_res.ix[2]
-
-# <codecell>
-
-#Selection
-non_nan_res.ix[3]
-
-# <codecell>
-
-#Selection
-non_nan_res.ix[121]
-
-# <codecell>
-
-#Selection
-non_nan_res.ix[121]
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
-
-# <codecell>
-
-#Selection
-df_ts_rolling_sum_std.ix[121]
-
-# <codecell>
-
-#Selection
-df_ts_rolling_sum_std.ix[8]
-
-# <codecell>
-
-data.ix[8]
-
-# <codecell>
-
-data.ix[[8,9]]
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*\
-                      (data["nb_peaks"].ix[results["Index"].values])>=25]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*\
-                      (data["nb_peaks"].ix[results["Index"].values])>=25]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*\
-                      (data["nb_peaks"].ix[results["Index"].values])>=29]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*\
-                      (data["nb_peaks"].ix[results["Index"].values])>=20]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
-
-# <codecell>
-
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*\
-                      (data["nb_peaks"].ix[results["Index"].values]>=20)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
-
-# <codecell>
-
-(data["nb_peaks"].ix[results["Index"].values]>=20)
-
-# <codecell>
-
-(data["nb_peaks"].ix[list(results["Index"].values)]>=20)
-
-# <codecell>
-
-(data["nb_peaks"].ix[list(results["Index"].values)]>=2)
-
-# <codecell>
-
-list(results["Index"].values)
-
-# <codecell>
-
-int(results["Index"].values)
-
-# <codecell>
-
-indexes = []
-for i in results["Index"].values:
-    indexes.append(int(i))
-indexes
-
-# <codecell>
-
-indexes = []
-for i in results["Index"].values:
-    indexes.append(int(i))
-
-# <codecell>
-
-(data["nb_peaks"].ix[indexes]>=2)
-
-# <codecell>
-
-data["nb_peaks"]
-
-# <codecell>
-
-data["nb_peaks"].ix[indexes]
-
-# <codecell>
-
-data["nb_peaks"].ix[indexes].shape
-
-# <codecell>
-
-data["nb_peaks"].shape
-
-# <codecell>
-
-data["nb_peaks"].ix[indexes]>=20
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-indexes = []
-for i in results["Index"].values:
-    indexes.append(int(i))
-    
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*\
-                      (data["nb_peaks"].ix[indexes]>=20)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-indexes = []
-for i in results["Index"].values:
-    indexes.append(int(i))
-    
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*(data["nb_peaks"].ix[indexes]>=20)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
-
-# <codecell>
-
-results
-
-# <codecell>
-
-results['nb_peaks'] = [data['nb_peaks'].ix[int(i)] for in results['Index'].values]
-results
-
-# <codecell>
-
-results['nb_peaks'] = [data['nb_peaks'].ix[int(i)] for i in results['Index'].values]
-results
-
-# <codecell>
-
-results['nb_peaks'] = [data['nb_peaks'].ix[int(i)] for i in results['Index'].values]
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-indexes = []
-for i in results["Index"].values:
-    indexes.append(int(i))
-    
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*(results['nb_peaks']>=20)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
-
 # <codecell>
 
-val_cols = [str(i) for i in range(1,67)]
-indexes = []
-for i in results["Index"].values:
-    indexes.append(int(i))
-    
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*(results['nb_peaks']>=2)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
+test = df_ts_states.irow([row]).values[0][70:]
+test
 
 # <codecell>
 
-val_cols = [str(i) for i in range(1,67)]
-indexes = []
-for i in results["Index"].values:
-    indexes.append(int(i))
-    
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*(results['nb_peaks']>=0)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
+test = df_ts_states.irow([row]).values[0][70:]
+test.sum()
 
 # <codecell>
 
-val_cols = [str(i) for i in range(1,67)]
-indexes = []
-for i in results["Index"].values:
-    indexes.append(int(i))
-    
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)*(results['nb_peaks']>=0)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
+test = df_ts_states.irow([0]).values[0][70:]
+test.sum()
 
 # <codecell>
 
-val_cols = [str(i) for i in range(1,67)]
-indexes = []
-for i in results["Index"].values:
-    indexes.append(int(i))
-    
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)*\
-                      (results['nb_peaks']>=0)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
+test = df_ts_states.irow([0]).values[0][70:]
+test.sum()
 
 # <codecell>
 
-val_cols = [str(i) for i in range(1,67)]
-indexes = []
-for i in results["Index"].values:
-    indexes.append(int(i))
-    
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)*\
-                      (results['nb_peaks']>=20)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
+test = df_ts_states.irow([0]).values[0][70:]
+test.sum()
 
 # <codecell>
 
-val_cols = [str(i) for i in range(1,67)]  
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)*\
-                      (results['nb_peaks']>=20)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
+dict_test_sum[1]
 
 # <codecell>
 
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+dict_test_sum[0]
 
 # <codecell>
 
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
+dict_test_sum
 
 # <codecell>
 
-#print error hists
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
-subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.hist(dict_test_sum.items())
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
+%%time
+dict_matrixes = {}
+dict_dists = {}
+test_sum = []
 
-# <codecell>
+for row in range(0, df_ts_states.shape[0]):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
 
-non_nan_res[y_last==0].shape
-
-# <codecell>
-
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=1)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=1)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
-
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
     
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
+    dict_matrixes[row] = transition_matrix
+    dict_dists[row] = stationary_dist
     
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
+    test_sum.append(test.sum())
 
 # <codecell>
 
-figure(figsize=(15, 10))
-
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
+test_sum
 
 # <codecell>
 
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-y_score_avg = 0.5*(avg_value_predict_test+2.0)
-#y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]  
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)*\
-                      (results['nb_peaks']>=10)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]  
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=0.5)*\
-                      (results['nb_peaks']>=10)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
-
-# <codecell>
-
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
-
-# <codecell>
-
-#print error hists
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
-subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.hist(test_sum)
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
+%%time
+dict_matrixes = {}
+dict_dists = {}
+test_sum = []
 
-# <codecell>
+for row in range(0, df_ts_states.shape[0]):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
 
-non_nan_res[y_last==0].shape
-
-# <codecell>
-
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
-
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
     
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
+    dict_matrixes[row] = transition_matrix
+    dict_dists[row] = stationary_dist
     
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
+    test_sum.append(((test>0)*1).sum())
 
 # <codecell>
 
-figure(figsize=(15, 10))
-
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-y_score_avg = 0.5*(avg_value_predict_test+2.0)
-#y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-cur_serie
-
-# <codecell>
-
-cur_serie.shape
-
-# <codecell>
-
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
-
-# <codecell>
-
-df_ts_rolling_sum.xs(i)
-
-# <codecell>
-
-df_ts_rolling_sum.xs(i)[104]
-
-# <codecell>
-
-df_ts_rolling_sum.xs(i)
-
-# <codecell>
-
-df_ts_rolling_sum.xs(i).values[104-fh]
-
-# <codecell>
-
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
-
-# <codecell>
-
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
-
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
-    
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
-    
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
-
-# <codecell>
-
-figure(figsize=(15, 10))
-
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-y_score_avg = 0.5*(avg_value_predict_test+2.0)
-#y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-#y_score_avg = 0.5*(avg_value_predict_test+2.0)
-y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(43,66)]
-valid_cols = [str(i) for i in range(43,53)]
-
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(82,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
-    
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
-    
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
-
-# <codecell>
-
-figure(figsize=(15, 10))
-
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-#y_score_avg = 0.5*(avg_value_predict_test+2.0)
-y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-figure(figsize=(15, 10))
-
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error valid')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-
-# <codecell>
-
-non_nan_res[test_cols].irow([1])
-
-# <codecell>
-
-non_nan_res[test_cols].irow([1]).mean(axis=1)
-
-# <codecell>
-
-non_nan_res[test_cols].irow([1]).mean(axis=0)
-
-# <codecell>
-
-non_nan_res[test_cols].irow([1]).mean(axis=1)
-
-# <codecell>
-
-non_nan_res[test_cols].irow([1])
-
-# <codecell>
-
-non_nan_res[test_cols].irow([1]).mean(axis=1)
-
-# <codecell>
-
-non_nan_res[test_cols].irow([1]).mean(axis=1).values
-
-# <codecell>
-
-non_nan_res[test_cols].irow([1]).mean(axis=1).values[0]
-
-# <codecell>
-
-df_ts_rolling_sum_std[range(82,105)].irow([1])
-
-# <codecell>
-
-df_ts_rolling_sum_std[range(82,105)].irow([1]).mean(axis=1)
-
-# <codecell>
-
-plt.hist(avg_value_true_test, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test<=1], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test<=0.1], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test<=0.9], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test<=0.01], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test<=0.1], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test<=0.00001], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test<=0.1], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test<=0.1], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_predict_test, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test<=0.1], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_predict_test, bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test==0.1], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_predict_test, bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test<=0.0000001], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_predict_test, bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test[avg_value_true_test>=0.0000001], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_predict_test, bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_true_valid, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_true_valid, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_true_valid[avg_value_true_test>=0.0000001], bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_true_valid, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_true_valid[avg_value_true_test<=0.0000001], bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_true_valid, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_true_valid[avg_value_true_test<=0.1], bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_true_valid, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_true_valid[avg_value_true_test<=0.5], bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_true_valid, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_true_valid[avg_value_true_test<=0.00001], bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_prue_test, bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.hist(avg_value_predict_test, bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(avg_value_true_test, bins=20, label='avg_value_true=0', alpha=0.5, color="r")
-plt.show()
-
-# <codecell>
-
-plt.plot(avg_value_predict_test)
-plt.plot(avg_value_true_testcolor="r")
-plt.show()
-
-# <codecell>
-
-plt.plot(avg_value_predict_test)
-plt.plot(avg_value_true_test, color="r")
-plt.show()
-
-# <codecell>
-
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
-
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
-    
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
-    
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
-
-# <codecell>
-
-figure(figsize=(15, 10))
-
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error valid')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-#y_score_avg = 0.5*(avg_value_predict_test+2.0)
-y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-%matplotlib inline
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-results = pd.read_csv('ann_res_50.csv')
-results.columns
-
-# <codecell>
-
-results['nb_peaks'] = [data['nb_peaks'].ix[int(i)] for i in results['Index'].values]
-
-# <codecell>
-
-df_ts_rolling_sum.columns
-#df_ts_rolling_sum = (df_ts_rolling_sum>0)*1
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]  
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)*\
-                      (results['nb_peaks']>=0)]
-#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
-non_nan_res.shape
-
-# <codecell>
-
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
-
-# <codecell>
-
-#print error hists
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for the last point
-subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.hist(test_sum)
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
-
-# <codecell>
-
-non_nan_res[y_last==0].shape
-
-# <codecell>
-
-figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
-
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
-    
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
-    
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
-
-# <codecell>
-
-figure(figsize=(15, 10))
-
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error valid')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true_avg = (avg_value_true_test>0)*1
-#y_score_avg = 0.5*(avg_value_predict_test+2.0)
-y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
-
-# <codecell>
-
-%matplotlib inline
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-results = pd.read_csv('ann_res_50.csv')
-results.columns
-
-# <codecell>
-
-%matplotlib inline
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-results = pd.read_csv('ann_res_50.csv')
-
-# <codecell>
-
-%matplotlib inline
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-results = pd.read_csv('ann_res_50.csv')
-results['nb_peaks'] = [data['nb_peaks'].ix[int(i)] for i in results['Index'].values]
-
-val_cols = [str(i) for i in range(1,67)]  
-non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=0.5)*(results['Error_train']<=0.05)*\
-                      (results['nb_peaks']>=0)]
-non_nan_res.shape
-
-# <codecell>
-
-max_values = df_ts_rolling_sum.max(axis=1)
-df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
-for col in df_ts_rolling_sum.columns:
-    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
-
-# <codecell>
-
-val_cols = [str(i) for i in range(1,67)]
-val_x = range(105-66,105)
-cols = range(13,105)
-a=0
-b=60
-N=b-a
-figure(figsize=(15, 5*(N//3+1)))
-for row in range(a,b):
-    subplot(N//3+1,3,row)
-    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
-    index = int(non_nan_res.irow([row])['Index'].values)
-    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
-    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
-    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
-    plt.title('Index is '+str(index))
-    plt.xlim(ws,105)
-    plt.ylim(-1,1.1)
-    plt.legend(loc='best')
-    #plt.show()
-
-# <codecell>
-
-#print error hists
 figure(figsize=(15, 5))
 subplot(121)
-plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
-plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
-plt.title('Errors')
-plt.legend(loc='best')
-#plt.show()
+plt.hist(test_sum, bins=20)
 
-#print predict value for the last point
+# <codecell>
+
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(test_sum, bins=10)
+
+# <codecell>
+
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+# <codecell>
+
+%%time
+dict_matrixes = {}
+stat_dists = []
+test_sum = []
+
+for row in range(0, df_ts_states.shape[0]):
+    train = df_ts_states.irow([row]).values[0][:70]
+    test = df_ts_states.irow([row]).values[0][70:]
+
+    transition_matrix = TransitionMatrix(train)
+    stationary_dist = StatDist(transition_matrix)
+    
+    dict_matrixes[row] = transition_matrix
+    stat_dists.append(stationary_dist)
+    
+    test_sum.append(((test>0)*1).sum())
+    
+stat_dists = np.array(stat_dists)
+test_sum = np.array(test_sum)
+
+# <codecell>
+
+stat_dists
+
+# <codecell>
+
+stat_dists[1,:]
+
+# <codecell>
+
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(121)
+plt.hist(stat_dists[1,:], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
 subplot(122)
-plt.hist(non_nan_res['66'].values, bins=10, label='last point')
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+plt.hist(stat_dists[1,:], bins=10)
+plt.title('Stationary distribution of the state 1')
 
 # <codecell>
 
-y_last=[]
-for i in non_nan_res['Index']:
-    i=int(i)
-    cur_serie = df_ts_rolling_sum.xs(i).values
-    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
-y_last = np.array(y_last)
-non_nan_res[y_last==0].shape
+stat_dists[1,:]
+
+# <codecell>
+
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(122)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 5))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1])
 
 # <codecell>
 
 figure(figsize=(15, 10))
-#print predict value for the last point
-subplot(2,2,1)
-values = non_nan_res['66'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
-#plt.show()
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
 
-#print predict value for 66th week
-subplot(2,2,2)
-values = non_nan_res['Error_test'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Error_test')
-plt.legend(loc='best')
-#plt.show()
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
 
-#print predict value for 66th week
-subplot(2,2,3)
-values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-#plt.show()
-
-#print predict value for 66th week
-subplot(2,2,4)
-values = non_nan_res['Error_valid'].values
-plt.hist(values[y_last==0], bins=10, label='y_last=0', alpha=0.5)
-plt.hist(values[y_last!=0], bins=10, label='y_last!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
-#plt.show()
-
-# <codecell>
-
-from sklearn.metrics import roc_curve, auc
-
-y_true = (y_last>0)*1
-#y_score = non_nan_res['66'].values
-y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
-fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
-roc_auc = auc(fpr, tpr)
-
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr, tpr)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc
-
-# <codecell>
-
-avg_value_predict_test = []
-avg_value_true_test = []
-avg_value_predict_valid = []
-avg_value_true_valid = []
-test_cols = [str(i) for i in range(53,66)]
-valid_cols = [str(i) for i in range(43,53)]
-
-for row in range(0,non_nan_res.shape[0]):
-    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_test.append(avg_val_pred_test)
-    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_test.append(avg_val_true_test)
-    
-    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
-    avg_value_predict_valid.append(avg_val_pred_valid)
-    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
-    avg_value_true_valid.append(avg_val_true_valid)
-    
-avg_value_predict_test = np.array(avg_value_predict_test)
-avg_value_true_test = np.array(avg_value_true_test)
-avg_value_predict_valid = np.array(avg_value_predict_valid)
-avg_value_true_valid = np.array(avg_value_true_valid)
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1])
 
 # <codecell>
 
 figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
 
-subplot(2,2,1)
-values = avg_value_predict_test
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Predict values')
-plt.legend(loc='best')
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
 
-subplot(2,2,2)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error valid')
-plt.legend(loc='best')
-
-subplot(2,2,3)
-values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Relative valid error')
-plt.legend(loc='best')
-
-subplot(2,2,4)
-values = avg_value_predict_valid - avg_value_true_valid
-plt.hist(values[avg_value_true_test==0], bins=20, label='avg_value_true=0', alpha=0.5)
-plt.hist(values[avg_value_true_test!=0], bins=20, label='avg_value_true!=0', alpha=0.5)
-plt.title('Error_valid')
-plt.legend(loc='best')
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.1)
 
 # <codecell>
 
-from sklearn.metrics import roc_curve, auc
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
 
-y_true_avg = (avg_value_true_test>0)*1
-#y_score_avg = 0.5*(avg_value_predict_test+2.0)
-y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
-fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
-roc_auc_avg = auc(fpr_avg, tpr_avg)
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
 
-figure(figsize=(15, 5))
-subplot(1,2,1)
-plt.plot(fpr_avg, tpr_avg)
-plt.title('ROC curve')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-print 'ROC AUC is ', roc_auc_avg
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
 
 # <codecell>
 
-# #get variables
-import ipykee
-keeper = ipykee.Keeper("C._NewFeatures")
-session = keeper["C2.1.1._RelativeNewFeatures_78weeks"]
-vars_c21 = session.get_variables("master")
-# #variables.keys()
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.02)
 
 # <codecell>
 
-vars_c21.keys()
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.02)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,2], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,2], alpha=0.02)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,0], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,0], alpha=0.02)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(1-stat_dists[:,0], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, 1-stat_dists[:,0], alpha=0.02)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(1-stat_dists[:,0], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, 1-stat_dists[:,0], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(1-stat_dists[:,0], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, 1-stat_dists[:,0], alpha=0.005)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(1-stat_dists[:,0], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, 1-stat_dists[:,0], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=1)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=1, bins=100)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=1, bins=100)
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=1, bins=35)
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+plt.title('LogNormed histogram')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, stat_dists[:,2], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+plt.title('LogNormed histogram')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, stat_dists[:,0], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+plt.title('LogNormed histogram')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(15, 10))
+subplot(221)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(222)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(223)
+plt.scatter(test_sum, stat_dists[:,1], alpha=0.01)
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+
+subplot(224)
+plt.hist2d(test_sum, 1-stat_dists[:,0], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+plt.title('LogNormed histogram')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(15, 10))
+subplot(231)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(232)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(233)
+plt.hist2d(test_sum, 1-stat_dists[:,0], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+plt.title('LogNormed histogram')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 10))
+subplot(231)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(232)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary distribution of the state 1')
+
+subplot(233)
+plt.hist2d(test_sum, 1-stat_dists[:,0], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary distribution of the state 1')
+plt.title('LogNormed histogram')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 15))
+
+subplot(331)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(332)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary probability of the state 1')
+
+subplot(333)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary probability of the state 1')
+plt.title('LogNormed histogram')
+
+subplot(334)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(335)
+plt.hist(stat_dists[:,2], bins=10)
+plt.title('Stationary probability of the state 2')
+
+subplot(336)
+plt.hist2d(test_sum, stat_dists[:,2], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary probability of the state 2')
+plt.title('LogNormed histogram')
+
+subplot(337)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(338)
+plt.hist(1-stat_dists[:,0], bins=10)
+plt.title('1-Stationary probability of the state 1')
+
+subplot(339)
+plt.hist2d(test_sum, 1-stat_dists[:,0], alpha=1, bins=35, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('1-Stationary probability of the state 1')
+plt.title('LogNormed histogram')
 
 # <codecell>
 
