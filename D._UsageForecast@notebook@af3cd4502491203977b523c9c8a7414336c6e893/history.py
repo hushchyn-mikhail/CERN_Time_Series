@@ -2079,3 +2079,7 @@ import ipykee
 #ipykee.create_project(project_name="D._UsageForecast", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
 session = ipykee.Session(project_name="D._UsageForecast")
 
+# <codecell>
+
+session.commit("ANN of Neurolab. Report 2. y_score added.")
+

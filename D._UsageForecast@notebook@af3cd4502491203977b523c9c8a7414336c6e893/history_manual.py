@@ -2082,3 +2082,7 @@ session = ipykee.Session(project_name="D._UsageForecast")
 # <codecell>
 
 session.commit("ANN of Neurolab. Report 2. y_score added.")
+
+# <codecell>
+
+session.commit("ANN of Neurolab. Report 2. y_score added.")
