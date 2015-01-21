@@ -4669,3 +4669,178 @@ import ipykee
 #ipykee.create_project(project_name="D._UsageForecast", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
 session = ipykee.Session(project_name="D._UsageForecast")
 
+# <codecell>
+
+session.commit("Markov Chains. y_score added. Distributions of the y_score added.")
+
+# <codecell>
+
+select = (data['inter_max']<=5)
+select = select.values
+print select.sum()
+
+stat_dists = stat_dists_t[select]
+test_sum = test_sum_t[select]
+valid_sum = valid_sum_t[select]
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 15))
+
+subplot(341)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(342)
+plt.hist(stat_dists[:,1], bins=10)
+plt.title('Stationary probability of the state 1')
+
+subplot(343)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=1, bins=19, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary probability of the state 1')
+plt.title('LogNormed histogram for test')
+
+subplot(344)
+plt.hist2d(valid_sum, stat_dists[:,1], alpha=1, bins=15, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in valid')
+plt.ylabel('Stationary probability of the state 1')
+plt.title('LogNormed histogram for valid')
+
+subplot(345)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(346)
+plt.hist(stat_dists[:,2], bins=10)
+plt.title('Stationary probability of the state 2')
+
+subplot(347)
+plt.hist2d(test_sum, stat_dists[:,2], alpha=1, bins=19, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary probability of the state 2')
+plt.title('LogNormed histogram for test')
+
+subplot(348)
+plt.hist2d(valid_sum, stat_dists[:,2], alpha=1, bins=15, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in valid')
+plt.ylabel('Stationary probability of the state 2')
+plt.title('LogNormed histogram for valid')
+
+subplot(349)
+plt.hist(test_sum, bins=10)
+plt.title('Number of the non zero values in test')
+
+subplot(3,4,10)
+plt.hist(1-stat_dists[:,0], bins=10)
+plt.title('1-Stationary probability of the state 1')
+
+subplot(3,4,11)
+plt.hist2d(test_sum, 1-stat_dists[:,0], alpha=1, bins=19, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('1-Stationary probability of the state 1')
+plt.title('LogNormed histogram for valid')
+
+subplot(3,4,12)
+plt.hist2d(valid_sum, 1-stat_dists[:,0], alpha=1, bins=19, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in valid')
+plt.ylabel('1-Stationary probability of the state 1')
+plt.title('LogNormed histogram for test')
+
+# <codecell>
+
+#General ROC-curve
+from sklearn.metrics import roc_curve, auc
+
+y_true = (test_sum>0)*1
+y_score = stat_dists[:,1]
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+def GetCoord(xedges, yedges, x, y):
+    for i in range(0,len(xedges)):
+        if x<xedges[i]:
+            break
+            
+    for j in range(0,len(yedges)):
+        if y<yedges[j]:
+            break
+    
+    return i-1,j-1
+
+# <codecell>
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(test_sum, stat_dists[:,1], alpha=1, bins=19, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('Stationary probability of the state 1')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(valid_sum, stat_dists[:,1], alpha=1, bins=15, norm=LogNorm())
+colorbar()
+plt.xlabel('Number of the non zero values in valid')
+plt.ylabel('Stationary probability of the state 1')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(test_sum)):
+    x,y = GetCoord(xedges, yedges, valid_sum[i], stat_dists[i,1])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[y_true==0], label='y_true=0', alpha=0.5)
+plt.hist(y_score[y_true!=0], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(2,3,4)
+plt.hist2d(test_sum, y_score, alpha=1, bins=19, norm=LogNorm())
+plt.colorbar()
+plt.xlabel('Number of the non zero values in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+
+subplot(2,3,5)
+plt.hist2d(valid_sum, y_score, alpha=1, bins=19, norm=LogNorm())
+plt.colorbar()
+plt.xlabel('Number of the non zero values in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+
+from sklearn.metrics import roc_curve, auc
+#y_true = (test_sum>0)*1
+#y_score = stat_dists[:,1]
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
