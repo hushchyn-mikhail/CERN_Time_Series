@@ -4629,3 +4629,1952 @@ import ipykee
 #ipykee.create_project(project_name="D._UsageForecast", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
 session = ipykee.Session(project_name="D._UsageForecast")
 
+# <codecell>
+
+session.commit("AUtoregression. First commit. Just for save.")
+
+# <codecell>
+
+non_nan_res[y_last<=0.01].shape
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last<=0.01], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.01], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last<=0.01], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.01], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last<=0.01], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.01], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Relative valid error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last<=0.01], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.01], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.01)*1
+#y_score = non_nan_res['66'].values
+y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.001)*1
+#y_score = non_nan_res['66'].values
+y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.0001)*1
+#y_score = non_nan_res['66'].values
+y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.01)*1
+#y_score = non_nan_res['66'].values
+y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+def GetCoord(xedges, yedges, x, y):
+    for i in range(0,len(xedges)):
+        if x<xedges[i]:
+            break
+            
+    for j in range(0,len(yedges)):
+        if y<yedges[j]:
+            break
+    
+    return i-1,j-1
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(y_last, non_nan_res['66'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(y_valid_last, non_nan_res['53'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, y_valid_last[i], non_nan_res['53'].values[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[y_last<=0.01], label='y_true=0', alpha=0.5)
+plt.hist(y_score[y_last>0.01], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(y_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(y_valid_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.01)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+avg_value_predict_test = []
+avg_value_true_test = []
+avg_value_predict_valid = []
+avg_value_true_valid = []
+test_cols = [str(i) for i in range(53,66)]
+valid_cols = [str(i) for i in range(43,53)]
+
+for row in range(0,non_nan_res.shape[0]):
+    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
+    avg_value_predict_test.append(avg_val_pred_test)
+    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
+    avg_value_true_test.append(avg_val_true_test)
+    
+    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
+    avg_value_predict_valid.append(avg_val_pred_valid)
+    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
+    avg_value_true_valid.append(avg_val_true_valid)
+    
+avg_value_predict_test = np.array(avg_value_predict_test)
+avg_value_true_test = np.array(avg_value_true_test)
+avg_value_predict_valid = np.array(avg_value_predict_valid)
+avg_value_true_valid = np.array(avg_value_true_valid)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+
+subplot(2,2,1)
+values = avg_value_predict_test
+plt.hist(values[avg_value_true_test<=0.01], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.01], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+
+subplot(2,2,2)
+values = avg_value_predict_valid - avg_value_true_valid
+plt.hist(values[avg_value_true_test<=0.01], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.01], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Error valid')
+plt.legend(loc='best')
+
+subplot(2,2,3)
+values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
+plt.hist(values[avg_value_true_test<=0.01], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.01], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Relative valid error')
+plt.legend(loc='best')
+
+subplot(2,2,4)
+values = avg_value_predict_valid - avg_value_true_valid
+plt.hist(values[avg_value_true_test<=0.01], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.01], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Error_valid')
+plt.legend(loc='best')
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true_avg = (avg_value_true_test>0.01)*1
+#y_score_avg = 0.5*(avg_value_predict_test+2.0)
+y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
+fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
+roc_auc_avg = auc(fpr_avg, tpr_avg)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr_avg, tpr_avg)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc_avg
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true_avg = (avg_value_true_test>0.001)*1
+#y_score_avg = 0.5*(avg_value_predict_test+2.0)
+y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
+fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
+roc_auc_avg = auc(fpr_avg, tpr_avg)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr_avg, tpr_avg)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc_avg
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true_avg = (avg_value_true_test>0.1)*1
+#y_score_avg = 0.5*(avg_value_predict_test+2.0)
+y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
+fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
+roc_auc_avg = auc(fpr_avg, tpr_avg)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr_avg, tpr_avg)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc_avg
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true_avg = (avg_value_true_test>0.01)*1
+#y_score_avg = 0.5*(avg_value_predict_test+2.0)
+y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
+fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
+roc_auc_avg = auc(fpr_avg, tpr_avg)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr_avg, tpr_avg)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc_avg
+
+# <codecell>
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(avg_value_true_test, avg_value_predict_test, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(avg_value_true_valid, avg_value_predict_valid, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, avg_value_true_valid[i], avg_value_predict_valid[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[avg_value_true_test<=0.01], label='y_true=0', alpha=0.5)
+plt.hist(y_score[avg_value_true_test>0.01], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(avg_value_true_test, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(avg_value_true_valid, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (avg_value_true_test>0.01)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Relative valid error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.001)*1
+#y_score = non_nan_res['66'].values
+y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(y_last, non_nan_res['66'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(y_valid_last, non_nan_res['53'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, y_valid_last[i], non_nan_res['53'].values[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[y_last<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[y_last>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(y_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(y_valid_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(y_last, non_nan_res['66'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(y_valid_last, non_nan_res['53'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, y_valid_last[i], non_nan_res['53'].values[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[y_last<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[y_last>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(y_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(y_valid_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.00001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(y_last, non_nan_res['66'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(y_valid_last, non_nan_res['53'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, y_valid_last[i], non_nan_res['53'].values[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[y_last<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[y_last>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(y_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(y_valid_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.00000001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(y_last, non_nan_res['66'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(y_valid_last, non_nan_res['53'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, y_valid_last[i], non_nan_res['53'].values[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[y_last<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[y_last>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(y_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(y_valid_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+figure(figsize=(15, 10))
+
+subplot(2,2,1)
+values = avg_value_predict_test
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+
+subplot(2,2,2)
+values = avg_value_predict_valid - avg_value_true_valid
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Error valid')
+plt.legend(loc='best')
+
+subplot(2,2,3)
+values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Relative valid error')
+plt.legend(loc='best')
+
+subplot(2,2,4)
+values = avg_value_predict_valid - avg_value_true_valid
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Error_valid')
+plt.legend(loc='best')
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true_avg = (avg_value_true_test>0.001)*1
+#y_score_avg = 0.5*(avg_value_predict_test+2.0)
+y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
+fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
+roc_auc_avg = auc(fpr_avg, tpr_avg)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr_avg, tpr_avg)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc_avg
+
+# <codecell>
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(avg_value_true_test, avg_value_predict_test, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(avg_value_true_valid, avg_value_predict_valid, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, avg_value_true_valid[i], avg_value_predict_valid[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[avg_value_true_test<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[avg_value_true_test>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(avg_value_true_test, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(avg_value_true_valid, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (avg_value_true_test>0.001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(avg_value_true_test, avg_value_predict_test, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(avg_value_true_valid, avg_value_predict_valid, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, avg_value_true_valid[i], avg_value_predict_valid[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[avg_value_true_test<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[avg_value_true_test>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(avg_value_true_test, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(avg_value_true_valid, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (avg_value_true_test>0.0001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(avg_value_true_test, avg_value_predict_test, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(avg_value_true_valid, avg_value_predict_valid, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, avg_value_true_valid[i], avg_value_predict_valid[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[avg_value_true_test<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[avg_value_true_test>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(avg_value_true_test, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(avg_value_true_valid, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (avg_value_true_test>0.001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]  
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=200)*(results['Error_train']<=200)]
+#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
+non_nan_res.shape
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
+for col in df_ts_rolling_sum.columns:
+    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=10, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+y_valid_last = []
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
+    y_valid_last.append(cur_serie[104-fh-13]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+y_valid_last = np.array(y_valid_last)
+
+# <codecell>
+
+non_nan_res[y_last<=0.001].shape
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Relative valid error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.001)*1
+#y_score = non_nan_res['66'].values
+y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+def GetCoord(xedges, yedges, x, y):
+    for i in range(0,len(xedges)):
+        if x<xedges[i]:
+            break
+            
+    for j in range(0,len(yedges)):
+        if y<yedges[j]:
+            break
+    
+    return i-1,j-1
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(y_last, non_nan_res['66'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(y_valid_last, non_nan_res['53'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, y_valid_last[i], non_nan_res['53'].values[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[y_last<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[y_last>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(y_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(y_valid_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+avg_value_predict_test = []
+avg_value_true_test = []
+avg_value_predict_valid = []
+avg_value_true_valid = []
+test_cols = [str(i) for i in range(53,66)]
+valid_cols = [str(i) for i in range(43,53)]
+
+for row in range(0,non_nan_res.shape[0]):
+    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
+    avg_value_predict_test.append(avg_val_pred_test)
+    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
+    avg_value_true_test.append(avg_val_true_test)
+    
+    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
+    avg_value_predict_valid.append(avg_val_pred_valid)
+    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
+    avg_value_true_valid.append(avg_val_true_valid)
+    
+avg_value_predict_test = np.array(avg_value_predict_test)
+avg_value_true_test = np.array(avg_value_true_test)
+avg_value_predict_valid = np.array(avg_value_predict_valid)
+avg_value_true_valid = np.array(avg_value_true_valid)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+
+subplot(2,2,1)
+values = avg_value_predict_test
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+
+subplot(2,2,2)
+values = avg_value_predict_valid - avg_value_true_valid
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Error valid')
+plt.legend(loc='best')
+
+subplot(2,2,3)
+values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Relative valid error')
+plt.legend(loc='best')
+
+subplot(2,2,4)
+values = avg_value_predict_valid - avg_value_true_valid
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Error_valid')
+plt.legend(loc='best')
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true_avg = (avg_value_true_test>0.001)*1
+#y_score_avg = 0.5*(avg_value_predict_test+2.0)
+y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
+fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
+roc_auc_avg = auc(fpr_avg, tpr_avg)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr_avg, tpr_avg)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc_avg
+
+# <codecell>
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(avg_value_true_test, avg_value_predict_test, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(avg_value_true_valid, avg_value_predict_valid, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, avg_value_true_valid[i], avg_value_predict_valid[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[avg_value_true_test<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[avg_value_true_test>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(avg_value_true_test, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(avg_value_true_valid, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (avg_value_true_test>0.001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]  
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)]
+#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
+non_nan_res.shape
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
+for col in df_ts_rolling_sum.columns:
+    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=10, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+y_valid_last = []
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
+    y_valid_last.append(cur_serie[104-fh-13]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+y_valid_last = np.array(y_valid_last)
+
+# <codecell>
+
+non_nan_res[y_last<=0.001].shape
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Relative valid error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.001)*1
+#y_score = non_nan_res['66'].values
+y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+def GetCoord(xedges, yedges, x, y):
+    for i in range(0,len(xedges)):
+        if x<xedges[i]:
+            break
+            
+    for j in range(0,len(yedges)):
+        if y<yedges[j]:
+            break
+    
+    return i-1,j-1
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(y_last, non_nan_res['66'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(y_valid_last, non_nan_res['53'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, y_valid_last[i], non_nan_res['53'].values[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[y_last<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[y_last>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(y_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(y_valid_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+avg_value_predict_test = []
+avg_value_true_test = []
+avg_value_predict_valid = []
+avg_value_true_valid = []
+test_cols = [str(i) for i in range(53,66)]
+valid_cols = [str(i) for i in range(43,53)]
+
+for row in range(0,non_nan_res.shape[0]):
+    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
+    avg_value_predict_test.append(avg_val_pred_test)
+    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
+    avg_value_true_test.append(avg_val_true_test)
+    
+    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
+    avg_value_predict_valid.append(avg_val_pred_valid)
+    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
+    avg_value_true_valid.append(avg_val_true_valid)
+    
+avg_value_predict_test = np.array(avg_value_predict_test)
+avg_value_true_test = np.array(avg_value_true_test)
+avg_value_predict_valid = np.array(avg_value_predict_valid)
+avg_value_true_valid = np.array(avg_value_true_valid)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+
+subplot(2,2,1)
+values = avg_value_predict_test
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+
+subplot(2,2,2)
+values = avg_value_predict_valid - avg_value_true_valid
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Error valid')
+plt.legend(loc='best')
+
+subplot(2,2,3)
+values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Relative valid error')
+plt.legend(loc='best')
+
+subplot(2,2,4)
+values = avg_value_predict_valid - avg_value_true_valid
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Error_valid')
+plt.legend(loc='best')
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true_avg = (avg_value_true_test>0.001)*1
+#y_score_avg = 0.5*(avg_value_predict_test+2.0)
+y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
+fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
+roc_auc_avg = auc(fpr_avg, tpr_avg)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr_avg, tpr_avg)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc_avg
+
+# <codecell>
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(avg_value_true_test, avg_value_predict_test, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(avg_value_true_valid, avg_value_predict_valid, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, avg_value_true_valid[i], avg_value_predict_valid[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[avg_value_true_test<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[avg_value_true_test>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(avg_value_true_test, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(avg_value_true_valid, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (avg_value_true_test>0.001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]  
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)]#*(results['Error_valid']<=1)*(results['Error_train']<=1)]
+#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
+non_nan_res.shape
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
+for col in df_ts_rolling_sum.columns:
+    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=10, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+#plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=10, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=10, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]  
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=1)*(results['Error_train']<=1)]
+#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
+non_nan_res.shape
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
+for col in df_ts_rolling_sum.columns:
+    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]  
+non_nan_res = results[(pd.isnull(results).sum(axis=1)==0)*(results['Error_valid']<=2)*(results['Error_train']<=2)]
+#non_nan_res[val_cols] = (non_nan_res[val_cols].values>=0.95)*1
+non_nan_res.shape
+
+# <codecell>
+
+max_values = df_ts_rolling_sum.max(axis=1)
+df_ts_rolling_sum_std = df_ts_rolling_sum.copy()
+for col in df_ts_rolling_sum.columns:
+    df_ts_rolling_sum_std[col] = df_ts_rolling_sum[col]/max_values
+
+# <codecell>
+
+val_cols = [str(i) for i in range(1,67)]
+val_x = range(105-66,105)
+cols = range(13,105)
+a=0
+b=60
+N=b-a
+figure(figsize=(15, 5*(N//3+1)))
+for row in range(a,b):
+    subplot(N//3+1,3,row)
+    plt.plot(val_x,non_nan_res[val_cols].irow([row]).values[0], color='r', label='predict')
+    index = int(non_nan_res.irow([row])['Index'].values)
+    plt.plot(cols, df_ts_rolling_sum_std[cols].xs(index), color='b', label='real')
+    plt.plot([param3+fh+ws,param3+fh+ws], [-1,1], color='black')
+    plt.plot([param3+fh-10+ws,param3+fh-10+ws], [-1,1], color='black')
+    plt.title('Index is '+str(index))
+    plt.xlim(ws,105)
+    plt.ylim(-1,1.1)
+    plt.legend(loc='best')
+    #plt.show()
+
+# <codecell>
+
+#print error hists
+figure(figsize=(15, 5))
+subplot(121)
+plt.hist(non_nan_res['Error_test'].values, color='r', bins=20, label='test', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_train'].values, color='b', bins=20, label='train', alpha=1, histtype='step')
+plt.hist(non_nan_res['Error_valid'].values, color='g', bins=20, label='valid', alpha=1, histtype='step')
+plt.title('Errors')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for the last point
+subplot(122)
+plt.hist(non_nan_res['66'].values, bins=10, label='last point')
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+y_last=[]
+y_valid_last = []
+for i in non_nan_res['Index']:
+    i=int(i)
+    cur_serie = df_ts_rolling_sum.xs(i).values
+    y_last.append(cur_serie[104-fh]/(1.0*cur_serie.max()))
+    y_valid_last.append(cur_serie[104-fh-13]/(1.0*cur_serie.max()))
+y_last = np.array(y_last)
+y_valid_last = np.array(y_valid_last)
+
+# <codecell>
+
+non_nan_res[y_last<=0.001].shape
+
+# <codecell>
+
+figure(figsize=(15, 10))
+#print predict value for the last point
+subplot(2,2,1)
+values = non_nan_res['66'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,2)
+values = non_nan_res['Error_test'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Error_test')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,3)
+values = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Relative valid error')
+plt.legend(loc='best')
+#plt.show()
+
+#print predict value for 66th week
+subplot(2,2,4)
+values = non_nan_res['Error_valid'].values
+plt.hist(values[y_last<=0.001], bins=10, label='y_last=0', alpha=0.5)
+plt.hist(values[y_last>0.001], bins=10, label='y_last!=0', alpha=0.5)
+plt.title('Error_valid')
+plt.legend(loc='best')
+#plt.show()
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.001)*1
+#y_score = non_nan_res['66'].values
+y_score = non_nan_res['Error_valid'].values/(non_nan_res['66'].values+2.0)
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr, tpr)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc
+
+# <codecell>
+
+def GetCoord(xedges, yedges, x, y):
+    for i in range(0,len(xedges)):
+        if x<xedges[i]:
+            break
+            
+    for j in range(0,len(yedges)):
+        if y<yedges[j]:
+            break
+    
+    return i-1,j-1
+
+# <codecell>
+
+from matplotlib.colors import LogNorm
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(y_last, non_nan_res['66'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(y_valid_last, non_nan_res['53'].values, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, y_valid_last[i], non_nan_res['53'].values[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[y_last<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[y_last>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(y_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(y_valid_last, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (y_last>0.001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+avg_value_predict_test = []
+avg_value_true_test = []
+avg_value_predict_valid = []
+avg_value_true_valid = []
+test_cols = [str(i) for i in range(53,66)]
+valid_cols = [str(i) for i in range(43,53)]
+
+for row in range(0,non_nan_res.shape[0]):
+    avg_val_pred_test = non_nan_res[test_cols].irow([row]).mean(axis=1).values[0]
+    avg_value_predict_test.append(avg_val_pred_test)
+    avg_val_true_test = df_ts_rolling_sum_std[range(92,105)].irow([row]).mean(axis=1).values[0]
+    avg_value_true_test.append(avg_val_true_test)
+    
+    avg_val_pred_valid = non_nan_res[valid_cols].irow([row]).mean(axis=1).values[0]
+    avg_value_predict_valid.append(avg_val_pred_valid)
+    avg_val_true_valid = df_ts_rolling_sum_std[range(82,92)].irow([row]).mean(axis=1).values[0]
+    avg_value_true_valid.append(avg_val_true_valid)
+    
+avg_value_predict_test = np.array(avg_value_predict_test)
+avg_value_true_test = np.array(avg_value_true_test)
+avg_value_predict_valid = np.array(avg_value_predict_valid)
+avg_value_true_valid = np.array(avg_value_true_valid)
+
+# <codecell>
+
+figure(figsize=(15, 10))
+
+subplot(2,2,1)
+values = avg_value_predict_test
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Predict values')
+plt.legend(loc='best')
+
+subplot(2,2,2)
+values = avg_value_predict_valid - avg_value_true_valid
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Error valid')
+plt.legend(loc='best')
+
+subplot(2,2,3)
+values = (avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Relative valid error')
+plt.legend(loc='best')
+
+subplot(2,2,4)
+values = avg_value_predict_valid - avg_value_true_valid
+plt.hist(values[avg_value_true_test<=0.001], bins=20, label='avg_value_true=0', alpha=0.5)
+plt.hist(values[avg_value_true_test>0.001], bins=20, label='avg_value_true!=0', alpha=0.5)
+plt.title('Error_valid')
+plt.legend(loc='best')
+
+# <codecell>
+
+from sklearn.metrics import roc_curve, auc
+
+y_true_avg = (avg_value_true_test>0.001)*1
+#y_score_avg = 0.5*(avg_value_predict_test+2.0)
+y_score_avg = 0.5*(avg_value_predict_valid - avg_value_true_valid)/(avg_value_predict_test+2.0)+0.5
+fpr_avg, tpr_avg, _ = roc_curve(y_true_avg, y_score_avg, pos_label=None, sample_weight=None)
+roc_auc_avg = auc(fpr_avg, tpr_avg)
+
+figure(figsize=(15, 5))
+subplot(1,2,1)
+plt.plot(fpr_avg, tpr_avg)
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+print 'ROC AUC is ', roc_auc_avg
+
+# <codecell>
+
+figure(figsize=(20, 10))
+
+subplot(231)
+plt.hist2d(avg_value_true_test, avg_value_predict_test, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in test')
+plt.ylabel('Predicted value of the last point in test')
+plt.title('LogNormed histogram for test')
+
+subplot(232)
+(counts, xedges, yedges, Image) = plt.hist2d(avg_value_true_valid, avg_value_predict_valid, norm=LogNorm(), bins=20)
+plt.colorbar()
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('Predicted value of the last point in valid')
+plt.title('LogNormed histogram for valid')
+
+counts_std = counts/counts.max()
+y_score = []
+for i in range(0, len(y_last)):
+    x,y = GetCoord(xedges, yedges, avg_value_true_valid[i], avg_value_predict_valid[i])
+    y_score.append(1-counts_std[x,y])
+y_score = np.array(y_score)
+
+subplot(2,3,3)
+plt.hist(y_score[avg_value_true_test<=0.001], label='y_true=0', alpha=0.5)
+plt.hist(y_score[avg_value_true_test>0.001], label = 'y_true!=0', alpha=0.5)
+plt.legend(loc='best')
+plt.title("y_score distribution")
+
+subplot(234)
+plt.hist2d(avg_value_true_test, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in test')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for test')
+plt.colorbar()
+
+subplot(235)
+plt.hist2d(avg_value_true_valid, y_score, norm=LogNorm(), bins=20)
+plt.xlabel('Value of the last point in valid')
+plt.ylabel('y_score')
+plt.title('LogNormed histogram for valid')
+plt.colorbar()
+
+from sklearn.metrics import roc_curve, auc
+
+y_true = (avg_value_true_test>0.001)*1
+fpr, tpr, _ = roc_curve(y_true, y_score, pos_label=None, sample_weight=None)
+roc_auc = auc(fpr, tpr)
+
+subplot(2,3,6)
+plt.plot(fpr, tpr, label='ROC auc = '+str(roc_auc))
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+
+# <codecell>
+
+import ipykee
+#ipykee.create_project(project_name="D._UsageForecast", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
+session = ipykee.Session(project_name="D._UsageForecast")
+
