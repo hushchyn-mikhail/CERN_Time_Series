@@ -973,3 +973,13 @@ import ipykee
 #ipykee.create_project(project_name="Battle_of_ANNs", repository="git@github.com:hushchyn-mikhail/CERN_Time_Series.git")
 session = ipykee.Session(project_name="Battle_of_ANNs")
 
+# <codecell>
+
+session.commit("Toy Dataset.")
+
+# <codecell>
+
+import ipykee
+ipykee.create_project(project_name="Battle_of_ANNs", repository="git@github.com:hushchyn-mikhail/Battle_of_ANNs.git")
+session = ipykee.Session(project_name="Battle_of_ANNs")
+
