@@ -665,3 +665,7 @@ session = ipykee.Session(project_name="E._LossFunctionOptimization")
 # <codecell>
 
 session.commit("Loss function 1 added.")
+
+# <codecell>
+
+session.commit("Loss function 2 added.")
